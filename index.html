@@ -1,133 +1,354 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Miner Pro</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Arial, sans-serif;
-    background: #0f1226;
-    color: #fff;
-    text-align: center;
-    padding: 20px;
-    min-height: 100vh;
-  }
-  h1 { margin-bottom: 6px; font-size: 26px; }
-  .sub { color: #9aa0c3; font-size: 14px; margin-bottom: 20px; }
-  .card {
-    background: #1b1f3b;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .balance { font-size: 40px; font-weight: bold; color: #ffd54a; }
-  .label { color: #9aa0c3; font-size: 13px; }
-  button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  .mine { background: #ffb300; color: #1b1f3b; }
-  .mine:disabled { background: #555; color: #aaa; }
-  .ad { background: #3d5afe; color: #fff; }
-  .timer { margin-top: 10px; color: #9aa0c3; font-size: 14px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grouche Mine - GRC Miner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b0e14;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+        .glow-card {
+            background: linear-gradient(135deg, rgba(20, 30, 45, 0.8) 0%, rgba(10, 15, 25, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            transition: all 0.2s ease;
+        }
+        .btn-gradient:active {
+            transform: scale(0.97);
+        }
+        .tab-glow {
+            background: radial-gradient(circle, rgba(34,197,94,0.2) 0%, rgba(11,14,20,0) 70%);
+        }
+    </style>
 </head>
-<body>
+<body class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative selection:bg-emerald-500 selection:text-white pb-20">
 
-<h1>⛏️ Miner Pro</h1>
-<div class="sub" id="user">স্বাগতম</div>
+    <!-- TOP HEADER -->
+    <header class="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#0b0e14]/90 sticky top-0 z-50 backdrop-blur">
+        <button onclick="playSound(); history.back();" class="text-gray-400 hover:text-white text-lg">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="flex items-center space-x-2 font-semibold text-lg tracking-wide">
+            <span>Grouche Mine</span> <span class="text-2xl">🍐</span>
+        </div>
+        <div class="flex items-center space-x-3 text-gray-400">
+            <button onclick="playSound();" class="hover:text-white"><i class="fa-solid fa-chevron-down text-sm"></i></button>
+            <button onclick="playSound();" class="hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+        </div>
+    </header>
 
-<div class="card">
-  <div class="label">আপনার ব্যালেন্স</div>
-  <div class="balance" id="balance">0</div>
-  <div class="label">কয়েন</div>
-</div>
+    <!-- WALLET CONNECT OVERLAY (Show initially if not connected) -->
+    <div id="walletScreen" class="fixed inset-0 bg-[#0b0e14] z-50 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 shadow-lg border border-gray-700">
+            <span class="text-4xl">🍐</span>
+        </div>
+        <h1 class="text-2xl font-bold mb-2">GRC Miner</h1>
+        <p class="text-gray-400 text-sm mb-8 max-w-xs">Connect your TON wallet to enter. No fee. You go straight to home.</p>
+        <button onclick="playSound(); connectWallet();" class="btn-gradient w-full py-4 rounded-xl font-bold text-gray-950 text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Connect TON Wallet</span>
+        </button>
+    </div>
 
-<div class="card">
-  <div class="label">মাইনিং রেট: <span id="rate">1</span> কয়েন / ক্লেইম</div>
-  <button class="mine" id="mineBtn">মাইন করুন ⛏️</button>
-  <div class="timer" id="timer"></div>
-</div>
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 px-4 py-4 space-y-4">
 
-<div class="card">
-  <div class="label">বোনাস কয়েন</div>
-  <button class="ad" id="adBtn">অ্যাড দেখে বোনাস নিন 🎁</button>
-</div>
+        <!-- TAB 1: HOME -->
+        <div id="tab-home" class="tab-content space-y-4">
+            <!-- User Profile Banner -->
+            <div class="flex items-center justify-between bg-gray-900/50 p-3 rounded-2xl border border-gray-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border border-emerald-500/50">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-sm text-gray-100 flex items-center space-x-1">
+                            <span>MD. TÂN JÎRÛL' KÎNG</span>
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                        </h2>
+                        <span class="text-xs text-gray-400">@Tanjirul12345</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span id="walletAddressBadge" class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-lg border border-gray-700">UQDu...g3DG</span>
+                </div>
+            </div>
 
-<script>
-  // টেলিগ্রাম ওয়েব অ্যাপ চালু
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+            <!-- Balances Card -->
+            <div class="glow-card p-5 rounded-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs uppercase tracking-wider text-gray-400 font-medium">AVAILABLE</span>
+                    <span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-coins"></i> GRC</span>
+                </div>
+                <div class="text-3xl font-extrabold tracking-tight mb-2" id="availableBalance">0.00</div>
+                <div class="text-xs text-gray-400 mb-5">Tasks • referral • mining <br>≈ US$<span id="usdtBalance">0.00</span></div>
+                <div class="text-[11px] text-gray-500 mb-4">This balance can be withdrawn.</div>
+                <button onclick="playSound(); withdrawCoins();" class="btn-gradient w-full py-3 rounded-xl font-bold text-gray-950 text-sm flex items-center justify-center space-x-2 shadow-md">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>Withdraw GRC</span>
+                </button>
+            </div>
 
-  // ব্যবহারকারীর নাম দেখানো
-  const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-  if (u) {
-    document.getElementById('user').textContent = 'স্বাগতম, ' + (u.first_name || '');
-  }
+            <!-- Grouche Coin Market Card -->
+            <div class="glow-card p-4 rounded-2xl space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🍐</span>
+                        <div>
+                            <h3 class="font-bold text-sm">Grouche Coin</h3>
+                            <span class="text-[10px] text-gray-400">$GRC • Live market</span>
+                        </div>
+                    </div>
+                    <button onclick="playSound(); showToast('Market refreshed!');" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+                <div class="flex justify-between items-baseline pt-1">
+                    <div>
+                        <span class="text-[10px] text-gray-400 uppercase">Price</span>
+                        <div class="text-xl font-bold text-emerald-400">$0.000874</div>
+                    </div>
+                    <span class="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded">-6.45%</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-800 text-xs">
+                    <div class="bg-gray-900/60 p-2 rounded-xl">
+                        <span class="text-[10px] text-gray-400 block"><i class="fa-solid fa-chart-line"></i> MARKET CAP</span>
+                        <span class="font-bold text-gray-200">$87.41K</span>
+                    </div>
+                    <div class="bg-gray-900/60 p-2 rounded-xl">
+                        <span class="text-[10px] text-gray-400 block"><i class="fa-solid fa-chart-pie"></i> FDV</span>
+                        <span class="font-bold text-gray-200">$87.41K</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  // সেভ করা ডেটা লোড
-  let balance = parseFloat(localStorage.getItem('balance')) || 0;
-  let rate = parseFloat(localStorage.getItem('rate')) || 1;
-  let lastMine = parseInt(localStorage.getItem('lastMine')) || 0;
-  const COOLDOWN = 60 * 1000; // ১ মিনিট
+        <!-- TAB 2: TASKS (Only 3 Tasks as requested) -->
+        <div id="tab-tasks" class="tab-content hidden space-y-4">
+            <div>
+                <h2 class="text-lg font-bold">Quests</h2>
+                <p class="text-xs text-gray-400">Complete tasks to earn GRC rewards.</p>
+            </div>
 
-  const balanceEl = document.getElementById('balance');
-  const rateEl = document.getElementById('rate');
-  const mineBtn = document.getElementById('mineBtn');
-  const timerEl = document.getElementById('timer');
-  const adBtn = document.getElementById('adBtn');
+            <div class="space-y-3">
+                <!-- Task 1: Telegram -->
+                <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl">
+                            <i class="fa-brands fa-telegram"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">Join Telegram Channel</h4>
+                            <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
+                        </div>
+                    </div>
+                    <button id="task1Btn" onclick="playSound(); completeTask(1, 'https://t.me/tanjirul0123')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                        Start
+                    </button>
+                </div>
 
-  function save() {
-    localStorage.setItem('balance', balance);
-    localStorage.setItem('rate', rate);
-    localStorage.setItem('lastMine', lastMine);
-  }
+                <!-- Task 2: Facebook -->
+                <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-500 flex items-center justify-center text-xl">
+                            <i class="fa-brands fa-facebook"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">Follow on Facebook</h4>
+                            <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
+                        </div>
+                    </div>
+                    <button id="task2Btn" onclick="playSound(); completeTask(2, 'https://www.facebook.com/share/19u3E68ctn/')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                        Start
+                    </button>
+                </div>
 
-  function render() {
-    balanceEl.textContent = balance.toFixed(2);
-    rateEl.textContent = rate;
-  }
+                <!-- Task 3: X / Twitter -->
+                <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-700/30 text-white flex items-center justify-center text-xl">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">Follow on X (Twitter)</h4>
+                            <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
+                        </div>
+                    </div>
+                    <button id="task3Btn" onclick="playSound(); completeTask(3, 'https://x.com/tanjirul_king')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                        Start
+                    </button>
+                </div>
+            </div>
+        </div>
 
-  function updateTimer() {
-    const left = COOLDOWN - (Date.now() - lastMine);
-    if (left > 0) {
-      mineBtn.disabled = true;
-      timerEl.textContent = 'পরের মাইনিং: ' + Math.ceil(left / 1000) + ' সেকেন্ড';
-    } else {
-      mineBtn.disabled = false;
-      timerEl.textContent = 'মাইনিং প্রস্তুত!';
-    }
-  }
+        <!-- TAB 3: MINE -->
+        <div id="tab-mine" class="tab-content hidden space-y-4">
+            <div class="glow-card p-4 rounded-2xl">
+                <span class="text-[10px] text-emerald-400 uppercase font-semibold">MINING</span>
+                <h2 class="text-lg font-bold">Cloud Miner</h2>
+                <div class="mt-3 bg-gray-900/60 p-4 rounded-xl text-center">
+                    <span class="text-xs text-gray-400 block">UNCLAIMED</span>
+                    <div class="text-2xl font-bold my-1 text-emerald-400" id="miningUnclaimed">0.0000 GRC</div>
+                    <span class="text-xs text-gray-500">≈ $0.000</span>
+                    <button onclick="playSound(); claimMining();" class="mt-3 btn-gradient w-full py-2.5 rounded-xl text-xs font-bold text-gray-950">
+                        Claim to Withdraw
+                    </button>
+                </div>
+            </div>
 
-  mineBtn.addEventListener('click', function () {
-    if (Date.now() - lastMine < COOLDOWN) return;
-    balance += rate;
-    lastMine = Date.now();
-    save();
-    render();
-    updateTimer();
-    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-  });
+            <div class="space-y-3">
+                <h3 class="font-bold text-sm">Miner packages</h3>
+                <div class="glow-card p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs">BASIC MINER v1 <span class="text-[10px] text-gray-400">7d</span></h4>
+                        <span class="text-[11px] text-emerald-400">$0.02 • 22.88 GRC/day</span>
+                    </div>
+                    <button onclick="playSound(); buyPackage(100);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">100 GRC</button>
+                </div>
+                <div class="glow-card p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs">PRO MINER X2 <span class="text-[10px] text-gray-400">15d</span></h4>
+                        <span class="text-[11px] text-emerald-400">$0.03 • 34.32 GRC/day</span>
+                    </div>
+                    <button onclick="playSound(); buyPackage(300);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">300 GRC</button>
+                </div>
+            </div>
+        </div>
 
-  // অ্যাড বাটন: পরে এখানে মনেট্যাগের অ্যাড কোড বসবে
-  adBtn.addEventListener('click', function () {
-    tg.showAlert('অ্যাড সিস্টেম শীঘ্রই যুক্ত হবে।');
-  });
+        <!-- TAB 4: YOU -->
+        <div id="tab-you" class="tab-content hidden space-y-4">
+            <div class="glow-card p-5 rounded-2xl text-center space-y-2">
+                <div class="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-emerald-500">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+                <h2 class="font-bold text-base">MD. TÂN JÎRÛL' KÎNG</h2>
+                <span class="text-xs text-gray-400 block">ID: 7243567058</span>
+                <span class="text-xs bg-gray-800 text-emerald-400 px-3 py-1 rounded-full inline-block border border-gray-700">UQDu...g3DG</span>
+            </div>
 
-  render();
-  updateTimer();
-  setInterval(updateTimer, 1000);
-</script>
+            <div class="glow-card p-4 rounded-2xl space-y-2">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase">EARNINGS OVERVIEW</h3>
+                <div class="flex justify-between text-xs py-1 border-b border-gray-800">
+                    <span class="text-gray-400">Total earned</span>
+                    <span id="totalEarned" class="font-bold">0.0000 GRC</span>
+                </div>
+                <div class="flex justify-between text-xs py-1">
+                    <span class="text-gray-400">Referrals</span>
+                    <span class="font-bold">0 active</span>
+                </div>
+            </div>
 
-</body>
-</html>
+            <button onclick="playSound(); showToast('Wallet connected & secure.');" class="glow-card w-full p-4 rounded-2xl flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i>
+                    <span>Manage TON Wallet</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0e14]/95 border-t border-gray-800 px-6 py-2 flex justify-between items-center z-45 backdrop-blur">
+        <button onclick="playSound(); switchTab('home', this);" class="nav-btn flex flex-col items-center text-emerald-400 transition" data-tab="home">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Home</span>
+        </button>
+        <button onclick="playSound(); switchTab('tasks', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="tasks">
+            <i class="fa-solid fa-gift text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Tasks</span>
+        </button>
+        <button onclick="playSound(); switchTab('mine', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="mine">
+            <i class="fa-solid fa-gem text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Mine</span>
+        </button>
+        <button onclick="playSound(); switchTab('you', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="you">
+            <i class="fa-solid fa-user text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">You</span>
+        </button>
+    </nav>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-emerald-600 text-gray-950 px-4 py-2 rounded-xl text-xs font-bold shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+        Notification message
+    </div>
+
+    <!-- JAVASCRIPT & AUDIO FX -->
+    <script>
+        // Web Audio API Synthesizer for button click sound
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+                
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch(e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        let userBalance = 0.00;
+        let completedTasks = {};
+
+        function updateUI() {
+            document.getElementById('availableBalance').innerText = userBalance.toFixed(2);
+            document.getElementById('usdtBalance').innerText = (userBalance * 0.000874).toFixed(4);
+            document.getElementById('totalEarned').innerText = userBalance.toFixed(4) + " GRC";
+        }
+
+        function connectWallet() {
+            document.getElementById('walletScreen').style.display = 'none';
+            showToast('TON Wallet Connected Successfully!');
+        }
+
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-400');
+                btn.classList.add('text-gray-400');
+            });
+            btnElement.classList.remove('text-gray-400');
+            btnElement.classList.add('text-emerald-400');
+        }
+
+        function completeTask(taskNumber, linkUrl) {
+            window.open(linkUrl, '_blank');
+            const btn = document.getElementById('task' + taskNumber + 'Btn');
+            
+            if(!completedTasks[taskNumber]) {
+                setTimeout(() => {
+                    btn.innerText = "Claim";
+                    btn.classList.add('bg-emerald-500', 'text-gray-950', 'font-bold');
+                    completedTasks[taskNumber] = 'ready';
+                }, 1500);
+            } else if(completedTasks[taskNumber] === 'ready') {
+                userBalance += 15.00;
+                completedTasks[taskNumber] = 'claimed';
+                btn.innerText = "Claimed";
+                btn.disabled = true;
+                btn.classList.remove('bg-emerald-500');
+                btn.classList.add('bg-gray-700', 'text-
