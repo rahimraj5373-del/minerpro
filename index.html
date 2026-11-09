@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Miner Pro</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f1226;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  h1 { margin-bottom: 6px; font-size: 26px; }
+  .sub { color: #9aa0c3; font-size: 14px; margin-bottom: 20px; }
+  .card {
+    background: #1b1f3b;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .balance { font-size: 40px; font-weight: bold; color: #ffd54a; }
+  .label { color: #9aa0c3; font-size: 13px; }
+  button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .mine { background: #ffb300; color: #1b1f3b; }
+  .mine:disabled { background: #555; color: #aaa; }
+  .ad { background: #3d5afe; color: #fff; }
+  .timer { margin-top: 10px; color: #9aa0c3; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>⛏️ Miner Pro</h1>
+<div class="sub" id="user">স্বাগতম</div>
+
+<div class="card">
+  <div class="label">আপনার ব্যালেন্স</div>
+  <div class="balance" id="balance">0</div>
+  <div class="label">কয়েন</div>
+</div>
+
+<div class="card">
+  <div class="label">মাইনিং রেট: <span id="rate">1</span> কয়েন / ক্লেইম</div>
+  <button class="mine" id="mineBtn">মাইন করুন ⛏️</button>
+  <div class="timer" id="timer"></div>
+</div>
+
+<div class="card">
+  <div class="label">বোনাস কয়েন</div>
+  <button class="ad" id="adBtn">অ্যাড দেখে বোনাস নিন 🎁</button>
+</div>
+
+<script>
+  // টেলিগ্রাম ওয়েব অ্যাপ চালু
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+
+  // ব্যবহারকারীর নাম দেখানো
+  const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (u) {
+    document.getElementById('user').textContent = 'স্বাগতম, ' + (u.first_name || '');
+  }
+
+  // সেভ করা ডেটা লোড
+  let balance = parseFloat(localStorage.getItem('balance')) || 0;
+  let rate = parseFloat(localStorage.getItem('rate')) || 1;
+  let lastMine = parseInt(localStorage.getItem('lastMine')) || 0;
+  const COOLDOWN = 60 * 1000; // ১ মিনিট
+
+  const balanceEl = document.getElementById('balance');
+  const rateEl = document.getElementById('rate');
+  const mineBtn = document.getElementById('mineBtn');
+  const timerEl = document.getElementById('timer');
+  const adBtn = document.getElementById('adBtn');
+
+  function save() {
+    localStorage.setItem('balance', balance);
+    localStorage.setItem('rate', rate);
+    localStorage.setItem('lastMine', lastMine);
+  }
+
+  function render() {
+    balanceEl.textContent = balance.toFixed(2);
+    rateEl.textContent = rate;
+  }
+
+  function updateTimer() {
+    const left = COOLDOWN - (Date.now() - lastMine);
+    if (left > 0) {
+      mineBtn.disabled = true;
+      timerEl.textContent = 'পরের মাইনিং: ' + Math.ceil(left / 1000) + ' সেকেন্ড';
+    } else {
+      mineBtn.disabled = false;
+      timerEl.textContent = 'মাইনিং প্রস্তুত!';
+    }
+  }
+
+  mineBtn.addEventListener('click', function () {
+    if (Date.now() - lastMine < COOLDOWN) return;
+    balance += rate;
+    lastMine = Date.now();
+    save();
+    render();
+    updateTimer();
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+  });
+
+  // অ্যাড বাটন: পরে এখানে মনেট্যাগের অ্যাড কোড বসবে
+  adBtn.addEventListener('click', function () {
+    tg.showAlert('অ্যাড সিস্টেম শীঘ্রই যুক্ত হবে।');
+  });
+
+  render();
+  updateTimer();
+  setInterval(updateTimer, 1000);
+</script>
+
+</body>
+</html>
