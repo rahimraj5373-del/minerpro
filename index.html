@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grouche Mine - GRC Miner</title>
+    <title>Crypto Miner Pro - GRC Miner</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -14,6 +14,7 @@
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         .glow-card {
             background: linear-gradient(135deg, rgba(20, 30, 45, 0.8) 0%, rgba(10, 15, 25, 0.9) 100%);
@@ -21,13 +22,10 @@
         }
         .btn-gradient {
             background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
-            transition: all 0.2s ease;
+            transition: transform 0.1s ease;
         }
         .btn-gradient:active {
-            transform: scale(0.97);
-        }
-        .tab-glow {
-            background: radial-gradient(circle, rgba(34,197,94,0.2) 0%, rgba(11,14,20,0) 70%);
+            transform: scale(0.96);
         }
     </style>
 </head>
@@ -35,26 +33,26 @@
 
     <!-- TOP HEADER -->
     <header class="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#0b0e14]/90 sticky top-0 z-50 backdrop-blur">
-        <button onclick="playSound(); history.back();" class="text-gray-400 hover:text-white text-lg">
+        <button onclick="playClickSound(); history.back();" class="text-gray-400 hover:text-white text-lg p-2">
             <i class="fa-solid fa-xmark"></i>
         </button>
         <div class="flex items-center space-x-2 font-semibold text-lg tracking-wide">
-            <span>Grouche Mine</span> <span class="text-2xl">🍐</span>
+            <span>Crypto Miner Pro</span> <span class="text-2xl">🍐</span>
         </div>
         <div class="flex items-center space-x-3 text-gray-400">
-            <button onclick="playSound();" class="hover:text-white"><i class="fa-solid fa-chevron-down text-sm"></i></button>
-            <button onclick="playSound();" class="hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <button onclick="playClickSound();" class="hover:text-white p-2"><i class="fa-solid fa-chevron-down text-sm"></i></button>
+            <button onclick="playClickSound();" class="hover:text-white p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </div>
     </header>
 
-    <!-- WALLET CONNECT OVERLAY (Show initially if not connected) -->
+    <!-- WALLET CONNECT OVERLAY -->
     <div id="walletScreen" class="fixed inset-0 bg-[#0b0e14] z-50 flex flex-col items-center justify-center p-6 text-center">
         <div class="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 shadow-lg border border-gray-700">
             <span class="text-4xl">🍐</span>
         </div>
         <h1 class="text-2xl font-bold mb-2">GRC Miner</h1>
         <p class="text-gray-400 text-sm mb-8 max-w-xs">Connect your TON wallet to enter. No fee. You go straight to home.</p>
-        <button onclick="playSound(); connectWallet();" class="btn-gradient w-full py-4 rounded-xl font-bold text-gray-950 text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
+        <button onclick="playClickSound(); connectWallet();" class="btn-gradient w-full py-4 rounded-xl font-bold text-gray-950 text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
             <i class="fa-solid fa-wallet"></i>
             <span>Connect TON Wallet</span>
         </button>
@@ -94,7 +92,7 @@
                 <div class="text-3xl font-extrabold tracking-tight mb-2" id="availableBalance">0.00</div>
                 <div class="text-xs text-gray-400 mb-5">Tasks • referral • mining <br>≈ US$<span id="usdtBalance">0.00</span></div>
                 <div class="text-[11px] text-gray-500 mb-4">This balance can be withdrawn.</div>
-                <button onclick="playSound(); withdrawCoins();" class="btn-gradient w-full py-3 rounded-xl font-bold text-gray-950 text-sm flex items-center justify-center space-x-2 shadow-md">
+                <button onclick="playClickSound(); withdrawCoins();" class="btn-gradient w-full py-3 rounded-xl font-bold text-gray-950 text-sm flex items-center justify-center space-x-2 shadow-md">
                     <i class="fa-solid fa-arrow-up"></i>
                     <span>Withdraw GRC</span>
                 </button>
@@ -110,7 +108,7 @@
                             <span class="text-[10px] text-gray-400">$GRC • Live market</span>
                         </div>
                     </div>
-                    <button onclick="playSound(); showToast('Market refreshed!');" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="playClickSound(); showToast('Market refreshed!');" class="text-gray-400 hover:text-white text-xs p-1"><i class="fa-solid fa-rotate"></i></button>
                 </div>
                 <div class="flex justify-between items-baseline pt-1">
                     <div>
@@ -151,7 +149,7 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task1Btn" onclick="playSound(); completeTask(1, 'https://t.me/tanjirul0123')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task1Btn" onclick="playClickSound(); completeTask(1, 'https://t.me/tanjirul0123')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
@@ -167,7 +165,7 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task2Btn" onclick="playSound(); completeTask(2, 'https://www.facebook.com/share/19u3E68ctn/')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task2Btn" onclick="playClickSound(); completeTask(2, 'https://www.facebook.com/share/19u3E68ctn/')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
@@ -183,7 +181,7 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task3Btn" onclick="playSound(); completeTask(3, 'https://x.com/tanjirul_king')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task3Btn" onclick="playClickSound(); completeTask(3, 'https://x.com/tanjirul_king')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
@@ -199,7 +197,7 @@
                     <span class="text-xs text-gray-400 block">UNCLAIMED</span>
                     <div class="text-2xl font-bold my-1 text-emerald-400" id="miningUnclaimed">0.0000 GRC</div>
                     <span class="text-xs text-gray-500">≈ $0.000</span>
-                    <button onclick="playSound(); claimMining();" class="mt-3 btn-gradient w-full py-2.5 rounded-xl text-xs font-bold text-gray-950">
+                    <button onclick="playClickSound(); claimMining();" class="mt-3 btn-gradient w-full py-2.5 rounded-xl text-xs font-bold text-gray-950">
                         Claim to Withdraw
                     </button>
                 </div>
@@ -212,14 +210,14 @@
                         <h4 class="font-bold text-xs">BASIC MINER v1 <span class="text-[10px] text-gray-400">7d</span></h4>
                         <span class="text-[11px] text-emerald-400">$0.02 • 22.88 GRC/day</span>
                     </div>
-                    <button onclick="playSound(); buyPackage(100);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">100 GRC</button>
+                    <button onclick="playClickSound(); buyPackage(100);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">100 GRC</button>
                 </div>
                 <div class="glow-card p-3 rounded-2xl flex items-center justify-between">
                     <div>
                         <h4 class="font-bold text-xs">PRO MINER X2 <span class="text-[10px] text-gray-400">15d</span></h4>
                         <span class="text-[11px] text-emerald-400">$0.03 • 34.32 GRC/day</span>
                     </div>
-                    <button onclick="playSound(); buyPackage(300);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">300 GRC</button>
+                    <button onclick="playClickSound(); buyPackage(300);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">300 GRC</button>
                 </div>
             </div>
         </div>
@@ -247,7 +245,7 @@
                 </div>
             </div>
 
-            <button onclick="playSound(); showToast('Wallet connected & secure.');" class="glow-card w-full p-4 rounded-2xl flex items-center justify-between text-xs">
+            <button onclick="playClickSound(); showToast('Wallet connected & secure.');" class="glow-card w-full p-4 rounded-2xl flex items-center justify-between text-xs">
                 <div class="flex items-center space-x-2">
                     <i class="fa-solid fa-wallet text-emerald-400"></i>
                     <span>Manage TON Wallet</span>
@@ -260,19 +258,19 @@
 
     <!-- BOTTOM NAVIGATION BAR -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0e14]/95 border-t border-gray-800 px-6 py-2 flex justify-between items-center z-45 backdrop-blur">
-        <button onclick="playSound(); switchTab('home', this);" class="nav-btn flex flex-col items-center text-emerald-400 transition" data-tab="home">
+        <button onclick="playClickSound(); switchTab('home', this);" class="nav-btn flex flex-col items-center text-emerald-400 transition py-1 px-3" data-tab="home">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Home</span>
         </button>
-        <button onclick="playSound(); switchTab('tasks', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="tasks">
+        <button onclick="playClickSound(); switchTab('tasks', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="tasks">
             <i class="fa-solid fa-gift text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Tasks</span>
         </button>
-        <button onclick="playSound(); switchTab('mine', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="mine">
+        <button onclick="playClickSound(); switchTab('mine', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="mine">
             <i class="fa-solid fa-gem text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Mine</span>
         </button>
-        <button onclick="playSound(); switchTab('you', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="you">
+        <button onclick="playClickSound(); switchTab('you', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="you">
             <i class="fa-solid fa-user text-lg"></i>
             <span class="text-[10px] font-medium mt-1">You</span>
         </button>
@@ -283,72 +281,7 @@
         Notification message
     </div>
 
-    <!-- JAVASCRIPT & AUDIO FX -->
+    <!-- JAVASCRIPT & FOOLPROOF AUDIO -->
     <script>
-        // Web Audio API Synthesizer for button click sound
-        function playSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
-                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
-                
-                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } catch(e) {
-                console.log("Audio not supported or blocked");
-            }
-        }
-
-        let userBalance = 0.00;
-        let completedTasks = {};
-
-        function updateUI() {
-            document.getElementById('availableBalance').innerText = userBalance.toFixed(2);
-            document.getElementById('usdtBalance').innerText = (userBalance * 0.000874).toFixed(4);
-            document.getElementById('totalEarned').innerText = userBalance.toFixed(4) + " GRC";
-        }
-
-        function connectWallet() {
-            document.getElementById('walletScreen').style.display = 'none';
-            showToast('TON Wallet Connected Successfully!');
-        }
-
-        function switchTab(tabName, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tabName).classList.remove('hidden');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-emerald-400');
-                btn.classList.add('text-gray-400');
-            });
-            btnElement.classList.remove('text-gray-400');
-            btnElement.classList.add('text-emerald-400');
-        }
-
-        function completeTask(taskNumber, linkUrl) {
-            window.open(linkUrl, '_blank');
-            const btn = document.getElementById('task' + taskNumber + 'Btn');
-            
-            if(!completedTasks[taskNumber]) {
-                setTimeout(() => {
-                    btn.innerText = "Claim";
-                    btn.classList.add('bg-emerald-500', 'text-gray-950', 'font-bold');
-                    completedTasks[taskNumber] = 'ready';
-                }, 1500);
-            } else if(completedTasks[taskNumber] === 'ready') {
-                userBalance += 15.00;
-                completedTasks[taskNumber] = 'claimed';
-                btn.innerText = "Claimed";
-                btn.disabled = true;
-                btn.classList.remove('bg-emerald-500');
-                btn.classList.add('bg-gray-700', 'text-
+        // Reliable Base64 Short Click Pop Audio
+        const clickAudio = new Audio("data:audio/mp3;base64,SUQzAwAAAAAAJlRJVDIAAAAJAAADQ29tbWVudABBdHRhY2hlZCBwaWN0dXJlACgAAABMYXZmNTkuMjcuMTAwAAAAAAAAAAAAAAD//sQAAABgAAAzgAAAAAAS2luZwAAACAAAAC7AABwVAB0dHs+PDz//v8//P//P///////v//+/v7+/v7+/P//v//v///////////////////////v//v//v/v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v
