@@ -14,45 +14,44 @@
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
         }
         .glow-card {
-            background: linear-gradient(135deg, rgba(20, 30, 45, 0.8) 0%, rgba(10, 15, 25, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(20, 30, 45, 0.85) 0%, rgba(10, 15, 25, 0.95) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .btn-gradient {
             background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
-            transition: transform 0.1s ease;
+            transition: all 0.2s ease;
         }
         .btn-gradient:active {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative selection:bg-emerald-500 selection:text-white pb-20">
+<body class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative selection:bg-emerald-500 selection:text-white pb-24">
 
     <!-- TOP HEADER -->
-    <header class="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#0b0e14]/90 sticky top-0 z-50 backdrop-blur">
-        <button onclick="playClickSound(); history.back();" class="text-gray-400 hover:text-white text-lg p-2">
+    <header class="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#0b0e14]/95 sticky top-0 z-50 backdrop-blur">
+        <button onclick="playSound(); history.back();" class="text-gray-400 hover:text-white text-lg p-1">
             <i class="fa-solid fa-xmark"></i>
         </button>
-        <div class="flex items-center space-x-2 font-semibold text-lg tracking-wide">
-            <span>Crypto Miner Pro</span> <span class="text-2xl">🍐</span>
+        <div class="flex items-center space-x-2 font-bold text-base tracking-wide">
+            <span>Crypto Miner Pro</span> <span class="text-xl">🍐</span>
         </div>
         <div class="flex items-center space-x-3 text-gray-400">
-            <button onclick="playClickSound();" class="hover:text-white p-2"><i class="fa-solid fa-chevron-down text-sm"></i></button>
-            <button onclick="playClickSound();" class="hover:text-white p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <button onclick="playSound();" class="hover:text-white p-1"><i class="fa-solid fa-chevron-down text-sm"></i></button>
+            <button onclick="playSound();" class="hover:text-white p-1"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </div>
     </header>
 
-    <!-- WALLET CONNECT OVERLAY -->
+    <!-- WALLET CONNECT OVERLAY (Initial Screen) -->
     <div id="walletScreen" class="fixed inset-0 bg-[#0b0e14] z-50 flex flex-col items-center justify-center p-6 text-center">
-        <div class="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 shadow-lg border border-gray-700">
+        <div class="w-20 h-20 bg-gray-900 rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-gray-800">
             <span class="text-4xl">🍐</span>
         </div>
         <h1 class="text-2xl font-bold mb-2">GRC Miner</h1>
-        <p class="text-gray-400 text-sm mb-8 max-w-xs">Connect your TON wallet to enter. No fee. You go straight to home.</p>
-        <button onclick="playClickSound(); connectWallet();" class="btn-gradient w-full py-4 rounded-xl font-bold text-gray-950 text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
+        <p class="text-gray-400 text-sm mb-8 max-w-xs leading-relaxed">Connect your TON wallet to enter. No fee. You go straight to home.</p>
+        <button onclick="playSound(); connectWallet();" class="btn-gradient w-full py-4 rounded-xl font-bold text-gray-950 text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
             <i class="fa-solid fa-wallet"></i>
             <span>Connect TON Wallet</span>
         </button>
@@ -64,21 +63,21 @@
         <!-- TAB 1: HOME -->
         <div id="tab-home" class="tab-content space-y-4">
             <!-- User Profile Banner -->
-            <div class="flex items-center justify-between bg-gray-900/50 p-3 rounded-2xl border border-gray-800">
+            <div class="flex items-center justify-between bg-gray-900/60 p-3.5 rounded-2xl border border-gray-800">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full overflow-hidden border border-emerald-500/50">
+                    <div class="w-10 h-10 rounded-full overflow-hidden border border-emerald-500/50 flex-shrink-0">
                         <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                     <div>
-                        <h2 class="font-bold text-sm text-gray-100 flex items-center space-x-1">
+                        <h2 class="font-bold text-xs text-gray-100 flex items-center space-x-1">
                             <span>MD. TÂN JÎRÛL' KÎNG</span>
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>
                         </h2>
-                        <span class="text-xs text-gray-400">@Tanjirul12345</span>
+                        <span class="text-[11px] text-gray-400">@Tanjirul12345</span>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span id="walletAddressBadge" class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-lg border border-gray-700">UQDu...g3DG</span>
+                    <span id="walletAddressBadge" class="text-[11px] bg-gray-800 text-gray-300 px-2.5 py-1 rounded-lg border border-gray-700 font-mono">UQDu...g3DG</span>
                 </div>
             </div>
 
@@ -86,13 +85,13 @@
             <div class="glow-card p-5 rounded-2xl relative overflow-hidden">
                 <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
                 <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs uppercase tracking-wider text-gray-400 font-medium">AVAILABLE</span>
+                    <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">AVAILABLE</span>
                     <span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-coins"></i> GRC</span>
                 </div>
-                <div class="text-3xl font-extrabold tracking-tight mb-2" id="availableBalance">0.00</div>
-                <div class="text-xs text-gray-400 mb-5">Tasks • referral • mining <br>≈ US$<span id="usdtBalance">0.00</span></div>
-                <div class="text-[11px] text-gray-500 mb-4">This balance can be withdrawn.</div>
-                <button onclick="playClickSound(); withdrawCoins();" class="btn-gradient w-full py-3 rounded-xl font-bold text-gray-950 text-sm flex items-center justify-center space-x-2 shadow-md">
+                <div class="text-3xl font-extrabold tracking-tight mb-1" id="availableBalance">0.00</div>
+                <div class="text-xs text-gray-400 mb-4">Tasks • referral • mining <br>≈ US$<span id="usdtBalance">0.00</span></div>
+                <div class="text-[11px] text-gray-500 mb-3">This balance can be withdrawn.</div>
+                <button onclick="playSound(); withdrawCoins();" class="btn-gradient w-full py-3 rounded-xl font-bold text-gray-950 text-sm flex items-center justify-center space-x-2 shadow-md">
                     <i class="fa-solid fa-arrow-up"></i>
                     <span>Withdraw GRC</span>
                 </button>
@@ -108,7 +107,7 @@
                             <span class="text-[10px] text-gray-400">$GRC • Live market</span>
                         </div>
                     </div>
-                    <button onclick="playClickSound(); showToast('Market refreshed!');" class="text-gray-400 hover:text-white text-xs p-1"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="playSound(); showToast('Market refreshed!');" class="text-gray-400 hover:text-white text-xs p-1"><i class="fa-solid fa-rotate"></i></button>
                 </div>
                 <div class="flex justify-between items-baseline pt-1">
                     <div>
@@ -118,11 +117,11 @@
                     <span class="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded">-6.45%</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-800 text-xs">
-                    <div class="bg-gray-900/60 p-2 rounded-xl">
+                    <div class="bg-gray-900/60 p-2.5 rounded-xl">
                         <span class="text-[10px] text-gray-400 block"><i class="fa-solid fa-chart-line"></i> MARKET CAP</span>
                         <span class="font-bold text-gray-200">$87.41K</span>
                     </div>
-                    <div class="bg-gray-900/60 p-2 rounded-xl">
+                    <div class="bg-gray-900/60 p-2.5 rounded-xl">
                         <span class="text-[10px] text-gray-400 block"><i class="fa-solid fa-chart-pie"></i> FDV</span>
                         <span class="font-bold text-gray-200">$87.41K</span>
                     </div>
@@ -130,7 +129,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: TASKS (Only 3 Tasks as requested) -->
+        <!-- TAB 2: TASKS (Exactly 3 Tasks as requested) -->
         <div id="tab-tasks" class="tab-content hidden space-y-4">
             <div>
                 <h2 class="text-lg font-bold">Quests</h2>
@@ -138,10 +137,10 @@
             </div>
 
             <div class="space-y-3">
-                <!-- Task 1: Telegram -->
+                <!-- Task 1: Telegram Channel -->
                 <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl flex-shrink-0">
                             <i class="fa-brands fa-telegram"></i>
                         </div>
                         <div>
@@ -149,15 +148,15 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task1Btn" onclick="playClickSound(); completeTask(1, 'https://t.me/tanjirul0123')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task1Btn" onclick="playSound(); completeTask(1, 'https://t.me/tanjirul0123')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
 
-                <!-- Task 2: Facebook -->
+                <!-- Task 2: Facebook Page -->
                 <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-500 flex items-center justify-center text-xl">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-500 flex items-center justify-center text-xl flex-shrink-0">
                             <i class="fa-brands fa-facebook"></i>
                         </div>
                         <div>
@@ -165,7 +164,7 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task2Btn" onclick="playClickSound(); completeTask(2, 'https://www.facebook.com/share/19u3E68ctn/')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task2Btn" onclick="playSound(); completeTask(2, 'https://www.facebook.com/share/19u3E68ctn/')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
@@ -173,7 +172,7 @@
                 <!-- Task 3: X / Twitter -->
                 <div class="glow-card p-4 rounded-2xl flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-gray-700/30 text-white flex items-center justify-center text-xl">
+                        <div class="w-10 h-10 rounded-xl bg-gray-700/30 text-white flex items-center justify-center text-xl flex-shrink-0">
                             <i class="fa-brands fa-x-twitter"></i>
                         </div>
                         <div>
@@ -181,7 +180,7 @@
                             <span class="text-xs text-emerald-400 font-semibold">+15 🍐 GRC</span>
                         </div>
                     </div>
-                    <button id="task3Btn" onclick="playClickSound(); completeTask(3, 'https://x.com/tanjirul_king')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
+                    <button id="task3Btn" onclick="playSound(); completeTask(3, 'https://x.com/tanjirul_king')" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-gray-200 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-700 transition">
                         Start
                     </button>
                 </div>
@@ -193,11 +192,11 @@
             <div class="glow-card p-4 rounded-2xl">
                 <span class="text-[10px] text-emerald-400 uppercase font-semibold">MINING</span>
                 <h2 class="text-lg font-bold">Cloud Miner</h2>
-                <div class="mt-3 bg-gray-900/60 p-4 rounded-xl text-center">
+                <div class="mt-3 bg-gray-900/60 p-4 rounded-xl text-center border border-gray-800">
                     <span class="text-xs text-gray-400 block">UNCLAIMED</span>
                     <div class="text-2xl font-bold my-1 text-emerald-400" id="miningUnclaimed">0.0000 GRC</div>
                     <span class="text-xs text-gray-500">≈ $0.000</span>
-                    <button onclick="playClickSound(); claimMining();" class="mt-3 btn-gradient w-full py-2.5 rounded-xl text-xs font-bold text-gray-950">
+                    <button onclick="playSound(); claimMining();" class="mt-3 btn-gradient w-full py-2.5 rounded-xl text-xs font-bold text-gray-950 shadow">
                         Claim to Withdraw
                     </button>
                 </div>
@@ -205,19 +204,19 @@
 
             <div class="space-y-3">
                 <h3 class="font-bold text-sm">Miner packages</h3>
-                <div class="glow-card p-3 rounded-2xl flex items-center justify-between">
+                <div class="glow-card p-3.5 rounded-2xl flex items-center justify-between">
                     <div>
                         <h4 class="font-bold text-xs">BASIC MINER v1 <span class="text-[10px] text-gray-400">7d</span></h4>
                         <span class="text-[11px] text-emerald-400">$0.02 • 22.88 GRC/day</span>
                     </div>
-                    <button onclick="playClickSound(); buyPackage(100);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">100 GRC</button>
+                    <button onclick="playSound(); buyPackage(100);" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-xs px-3.5 py-2 rounded-xl font-semibold border border-gray-700 transition">100 GRC</button>
                 </div>
-                <div class="glow-card p-3 rounded-2xl flex items-center justify-between">
+                <div class="glow-card p-3.5 rounded-2xl flex items-center justify-between">
                     <div>
                         <h4 class="font-bold text-xs">PRO MINER X2 <span class="text-[10px] text-gray-400">15d</span></h4>
                         <span class="text-[11px] text-emerald-400">$0.03 • 34.32 GRC/day</span>
                     </div>
-                    <button onclick="playClickSound(); buyPackage(300);" class="bg-gray-800 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-xl font-semibold border border-gray-700">300 GRC</button>
+                    <button onclick="playSound(); buyPackage(300);" class="bg-gray-800 hover:bg-emerald-600 hover:text-gray-950 text-xs px-3.5 py-2 rounded-xl font-semibold border border-gray-700 transition">300 GRC</button>
                 </div>
             </div>
         </div>
@@ -225,52 +224,52 @@
         <!-- TAB 4: YOU -->
         <div id="tab-you" class="tab-content hidden space-y-4">
             <div class="glow-card p-5 rounded-2xl text-center space-y-2">
-                <div class="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-emerald-500">
+                <div class="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-emerald-500 shadow-md">
                     <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="w-full h-full object-cover">
                 </div>
-                <h2 class="font-bold text-base">MD. TÂN JÎRÛL' KÎNG</h2>
+                <h2 class="font-bold text-sm">MD. TÂN JÎRÛL' KÎNG</h2>
                 <span class="text-xs text-gray-400 block">ID: 7243567058</span>
-                <span class="text-xs bg-gray-800 text-emerald-400 px-3 py-1 rounded-full inline-block border border-gray-700">UQDu...g3DG</span>
+                <span class="text-xs bg-gray-800 text-emerald-400 px-3 py-1 rounded-full inline-block border border-gray-700 font-mono">UQDu...g3DG</span>
             </div>
 
             <div class="glow-card p-4 rounded-2xl space-y-2">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase">EARNINGS OVERVIEW</h3>
-                <div class="flex justify-between text-xs py-1 border-b border-gray-800">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide">EARNINGS OVERVIEW</h3>
+                <div class="flex justify-between text-xs py-1.5 border-b border-gray-800">
                     <span class="text-gray-400">Total earned</span>
                     <span id="totalEarned" class="font-bold">0.0000 GRC</span>
                 </div>
-                <div class="flex justify-between text-xs py-1">
+                <div class="flex justify-between text-xs py-1.5">
                     <span class="text-gray-400">Referrals</span>
                     <span class="font-bold">0 active</span>
                 </div>
             </div>
 
-            <button onclick="playClickSound(); showToast('Wallet connected & secure.');" class="glow-card w-full p-4 rounded-2xl flex items-center justify-between text-xs">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-wallet text-emerald-400"></i>
-                    <span>Manage TON Wallet</span>
+            <button onclick="playSound(); showToast('Wallet connected & secure.');" class="glow-card w-full p-4 rounded-2xl flex items-center justify-between text-xs hover:bg-gray-800/50 transition">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-wallet text-emerald-400 text-sm"></i>
+                    <span class="font-semibold">Manage TON Wallet</span>
                 </div>
-                <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
             </button>
         </div>
 
     </main>
 
     <!-- BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0e14]/95 border-t border-gray-800 px-6 py-2 flex justify-between items-center z-45 backdrop-blur">
-        <button onclick="playClickSound(); switchTab('home', this);" class="nav-btn flex flex-col items-center text-emerald-400 transition py-1 px-3" data-tab="home">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0e14]/95 border-t border-gray-800 px-6 py-2.5 flex justify-between items-center z-40 backdrop-blur">
+        <button onclick="playSound(); switchTab('home', this);" class="nav-btn flex flex-col items-center text-emerald-400 transition" data-tab="home">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Home</span>
         </button>
-        <button onclick="playClickSound(); switchTab('tasks', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="tasks">
+        <button onclick="playSound(); switchTab('tasks', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="tasks">
             <i class="fa-solid fa-gift text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Tasks</span>
         </button>
-        <button onclick="playClickSound(); switchTab('mine', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="mine">
+        <button onclick="playSound(); switchTab('mine', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="mine">
             <i class="fa-solid fa-gem text-lg"></i>
             <span class="text-[10px] font-medium mt-1">Mine</span>
         </button>
-        <button onclick="playClickSound(); switchTab('you', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition py-1 px-3" data-tab="you">
+        <button onclick="playSound(); switchTab('you', this);" class="nav-btn flex flex-col items-center text-gray-400 hover:text-white transition" data-tab="you">
             <i class="fa-solid fa-user text-lg"></i>
             <span class="text-[10px] font-medium mt-1">You</span>
         </button>
@@ -281,7 +280,71 @@
         Notification message
     </div>
 
-    <!-- JAVASCRIPT & FOOLPROOF AUDIO -->
+    <!-- JAVASCRIPT & AUDIO FX -->
     <script>
-        // Reliable Base64 Short Click Pop Audio
-        const clickAudio = new Audio("data:audio/mp3;base64,SUQzAwAAAAAAJlRJVDIAAAAJAAADQ29tbWVudABBdHRhY2hlZCBwaWN0dXJlACgAAABMYXZmNTkuMjcuMTAwAAAAAAAAAAAAAAD//sQAAABgAAAzgAAAAAAS2luZwAAACAAAAC7AABwVAB0dHs+PDz//v8//P//P///////v//+/v7+/v7+/P//v//v///////////////////////v//v//v/v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v//v
+        // Web Audio API Synthesizer for button click sound
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+                
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch(e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        let userBalance = 0.00;
+        let completedTasks = {};
+
+        function updateUI() {
+            const availEl = document.getElementById('availableBalance');
+            const usdtEl = document.getElementById('usdtBalance');
+            const totalEl = document.getElementById('totalEarned');
+            
+            if(availEl) availEl.innerText = userBalance.toFixed(2);
+            if(usdtEl) usdtEl.innerText = (userBalance * 0.000874).toFixed(4);
+            if(totalEl) totalEl.innerText = userBalance.toFixed(4) + " GRC";
+        }
+
+        function connectWallet() {
+            const walletScreen = document.getElementById('walletScreen');
+            if(walletScreen) {
+                walletScreen.style.opacity = '0';
+                setTimeout(() => {
+                    walletScreen.style.display = 'none';
+                }, 300);
+            }
+            showToast('TON Wallet Connected Successfully!');
+        }
+
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const targetTab = document.getElementById('tab-' + tabName);
+            if(targetTab) targetTab.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-400');
+                btn.classList.add('text-gray-400');
+            });
+            if(btnElement) {
+                btnElement.classList.remove('text-gray-400');
+                btnElement.classList.add('text-emerald-400');
+            }
+        }
+
+        function completeTask(taskNumber, linkUrl) {
+            window.open(linkUrl, '_blank');
+            const btn = document.getElementById('task' 
