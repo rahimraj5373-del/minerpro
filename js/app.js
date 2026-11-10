@@ -150,18 +150,19 @@
     o.start(t); o.stop(t + dur + 0.03);
   }
   // ক্লিকের শব্দ একবারই তৈরি হয়ে মেমোরিতে থাকে, তাই প্রতিবার বাজাতে কোনো ল্যাগ হয় না
+  // soft "pop": a sine that glides down from ~900 Hz, smooth 2 ms attack, ~80 ms decay, low-passed so it never sounds harsh
   function buildClick(a) {
-    var sr = a.sampleRate, n = Math.floor(sr * 0.16), b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
-    var p1 = 0, p2 = 0;
+    var sr = a.sampleRate, n = Math.floor(sr * 0.09), b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
+    var ph = 0, lp = 0, k = 1 - Math.exp(-2 * Math.PI * 3500 / sr), peak = 0;
     for (var i = 0; i < n; i++) {
       var t = i / sr;
-      var f = 520 + 1300 * Math.exp(-t * 38);
-      p1 += 2 * Math.PI * f / sr; p2 += 2 * Math.PI * 1760 / sr;
-      var pop = Math.sin(p1) * Math.exp(-t * 42) * 0.55;
-      var tick = (Math.random() * 2 - 1) * Math.exp(-t * 1200) * 0.35;
-      var shine = t > 0.018 ? Math.sin(p2) * Math.exp(-(t - 0.018) * 28) * 0.16 : 0;
-      d[i] = pop + tick + shine;
+      ph += 2 * Math.PI * (280 + 620 * Math.exp(-t * 60)) / sr;
+      var env = (1 - Math.exp(-t * 900)) * Math.exp(-t * 48);
+      var x = (Math.sin(ph) + 0.18 * Math.sin(2 * ph) * Math.exp(-t * 70)) * env;
+      lp += k * (x - lp); d[i] = lp;
+      if (Math.abs(lp) > peak) peak = Math.abs(lp);
     }
+    for (var j = 0; j < n; j++) d[j] *= 0.9 / peak;
     return b;
   }
   function unlockAudio() {
@@ -179,8 +180,8 @@
     unlockAudio(); if (!ac || !clickBuf) return;
     var src = ac.createBufferSource(), g = ac.createGain();
     src.buffer = clickBuf;
-    src.playbackRate.value = 0.95 + Math.random() * 0.1;
-    g.gain.value = 0.55;
+    src.playbackRate.value = 0.97 + Math.random() * 0.06;
+    g.gain.value = 0.4;
     src.connect(g); g.connect(master);
     src.start(0);
   }
