@@ -152,7 +152,7 @@
 
 <!-- HOME -->
 <section class="page active" id="p-home">
-  <div class="brand"><svg><use href="#logo"/></svg><div><b>Miner Pro</b><small>CLOUD MINER</small></div></div>
+  <div class="brand"><svg><use href="#logo"/></svg><div><b>Miner Pro</b><small>CLOUD MINER · v2</small></div></div>
 
   <div class="hello">
     <div>
@@ -387,4 +387,259 @@
     var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + delay;
     o.type = type || 'sine'; o.frequency.value = freq;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtT
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  var sfx = {
+    click:   function () { tone(660, 0, .09, 'triangle', .12); tone(990, .05, .11, 'triangle', .10); },
+    success: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, .08 + i * .09, .25, 'sine', .16); }); },
+    welcome: function () { [392, 523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * .12, .4, 'sine', .15); }); tone(1568, .72, .55, 'triangle', .08); },
+    error:   function () { tone(220, .05, .18, 'sawtooth', .07); tone(170, .17, .22, 'sawtooth', .07); }
+  };
+
+  // প্রতিটি বাটনে ক্লিক করলেই সুর বাজবে
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (b && !b.disabled) sfx.click();
+  }, true);
+
+  /* ---------- Mining ---------- */
+  function rate() {
+    var r = CFG.BASE_RATE;
+    RIGS.forEach(function (g) { if (S.rigs[g.id]) r += g.add; });
+    return r;
+  }
+  function accrued() {
+    if (!S.mineEnd) return 0;
+    var t = Math.min(Date.now(), S.mineEnd);
+    return S.pending + Math.max(0, t - S.mineStart) / 36e5 * rate();
+  }
+  function settle() {
+    if (!S.mineEnd) return;
+    S.pending = accrued();
+    S.mineStart = Math.min(Date.now(), S.mineEnd);
+  }
+  function mineState() {
+    if (!S.mineEnd) return 'idle';
+    return Date.now() < S.mineEnd ? 'running' : 'done';
+  }
+  function addCoins(n) { S.coins += n; S.earned += n; }
+
+  $('mineBtn').onclick = function () {
+    var st = mineState();
+    if (st === 'idle') {
+      S.mineStart = Date.now(); S.mineEnd = S.mineStart + CFG.SESSION_HOURS * 36e5; S.pending = 0;
+      save(); render(); toast('Mining started ⛏', 'ok'); haptic('success');
+    } else if (st === 'done') {
+      var amt = accrued(); addCoins(amt);
+      S.mineEnd = 0; S.mineStart = 0; S.pending = 0;
+      save(); render(); sfx.success(); haptic(); toast('+' + fmt(amt) + ' ' + CFG.COIN + ' claimed', 'ok');
+    }
+  };
+
+  /* ---------- Rigs ---------- */
+  function renderRigs() {
+    var box = $('rigList'); box.innerHTML = '';
+    RIGS.forEach(function (g) {
+      var owned = !!S.rigs[g.id];
+      var d = document.createElement('div'); d.className = 'card rig';
+      d.innerHTML = '<div class="ticon">⚡</div><div class="grow"><h4>' + g.name + '</h4><p>+' + g.add + ' ' + CFG.COIN + ' / hour</p><div class="cost">' + g.cost + ' ' + CFG.COIN + '</div></div>';
+      var b = document.createElement('button'); b.className = 'btn violet sm';
+      b.textContent = owned ? 'Owned ✓' : 'Get'; b.disabled = owned;
+      b.onclick = function () {
+        if (S.coins < g.cost) { sfx.error(); toast('Not enough ' + CFG.COIN, 'err'); return; }
+        settle(); S.coins -= g.cost; S.rigs[g.id] = true;
+        save(); render(); sfx.success(); haptic(); toast(g.name + ' unlocked!', 'ok');
+      };
+      d.appendChild(b); box.appendChild(d);
+    });
+  }
+
+  /* ---------- Tasks ---------- */
+  function openLink(t) {
+    try {
+      if (tg && t.tme && tg.openTelegramLink) tg.openTelegramLink(t.url);
+      else if (tg && tg.openLink) tg.openLink(t.url);
+      else window.open(t.url, '_blank');
+    } catch (e) { window.open(t.url, '_blank'); }
+  }
+  function renderTasks() {
+    var box = $('taskList'); box.innerHTML = ''; var open = 0;
+    TASKS.forEach(function (t) {
+      var st = S.tasks[t.id] || {};
+      var d = document.createElement('div'); d.className = 'card task';
+      d.innerHTML = '<div class="ticon">' + t.icon + '</div><div class="grow"><h4>' + t.title + '</h4><div class="muted">' + t.desc + '</div><div class="rw">+' + CFG.TASK_REWARD + ' ' + CFG.COIN + '</div></div>';
+      var b = document.createElement('button'); b.className = 'btn gold sm'; b.setAttribute('data-task', t.id);
+      if (st.done) { b.textContent = 'Done ✓'; b.disabled = true; }
+      else {
+        open++;
+        if (!st.t) { b.textContent = 'Go'; b.onclick = function () { S.tasks[t.id] = { t: Date.now() }; save(); openLink(t); render(); }; }
+        else {
+          var left = CFG.VERIFY_SECONDS - Math.floor((Date.now() - st.t) / 1000);
+          if (left > 0) { b.textContent = 'Checking ' + left + 's'; b.disabled = true; }
+          else {
+            b.textContent = 'Claim'; b.className = 'btn mint sm';
+            b.onclick = function () {
+              S.tasks[t.id] = { done: true }; addCoins(CFG.TASK_REWARD);
+              save(); render(); sfx.success(); haptic(); toast('+' + CFG.TASK_REWARD + ' ' + CFG.COIN + ' earned', 'ok');
+            };
+          }
+        }
+      }
+      d.appendChild(b); box.appendChild(d);
+    });
+    $('openTasks').textContent = open;
+  }
+
+  /* ---------- Daily ---------- */
+  $('dailyBtn').onclick = function () {
+    var left = S.daily + 864e5 - Date.now();
+    if (left > 0) { sfx.error(); toast('Come back in ' + hms(left), 'err'); return; }
+    S.daily = Date.now(); addCoins(CFG.DAILY);
+    save(); render(); sfx.success(); haptic(); toast('+' + CFG.DAILY + ' ' + CFG.COIN + ' daily bonus', 'ok');
+  };
+
+  /* ---------- Navigation ---------- */
+  function show(page) {
+    document.querySelectorAll('.page').forEach(function (p) { p.classList.toggle('active', p.id === 'p-' + page); });
+    document.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-page') === page); });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('nav button').forEach(function (b) {
+    b.onclick = function () { show(b.getAttribute('data-page')); };
+  });
+  $('goMine').onclick = function () { show('mine'); };
+
+  /* ---------- Wallet ---------- */
+  function shortAddr(a) { return a.length > 12 ? a.slice(0, 4) + '…' + a.slice(-4) : a; }
+  function saveWallet(v) {
+    v = (v || '').trim();
+    if (v.length < 20) { sfx.error(); toast('Enter a valid wallet address', 'err'); return false; }
+    S.wallet = v; save(); render(); sfx.success(); toast('Wallet saved', 'ok'); return true;
+  }
+  $('saveWallet').onclick = function () { saveWallet($('walletInput').value); };
+  $('walletChip').onclick = function () { show('you'); setTimeout(function () { $('walletInput').focus(); }, 300); };
+
+  /* ---------- Withdraw ---------- */
+  function openSheet(id) { $(id).classList.add('show'); }
+  function closeSheet(id) { $(id).classList.remove('show'); }
+  $('withdrawBtn').onclick = function () {
+    $('wdAvail').textContent = fmt(S.coins); $('minWd').textContent = CFG.MIN_WITHDRAW;
+    $('wdWallet').value = S.wallet; $('wdAmount').value = '';
+    openSheet('wdOverlay');
+  };
+  $('wdClose').onclick = function () { closeSheet('wdOverlay'); };
+  $('wdSubmit').onclick = function () {
+    var w = $('wdWallet').value.trim(), a = parseFloat($('wdAmount').value);
+    if (w.length < 20) { sfx.error(); toast('Enter a valid wallet address', 'err'); return; }
+    if (!(a >= CFG.MIN_WITHDRAW)) { sfx.error(); toast('Minimum withdraw is ' + CFG.MIN_WITHDRAW + ' ' + CFG.COIN, 'err'); return; }
+    if (a > S.coins) { sfx.error(); toast('Not enough balance', 'err'); return; }
+    S.wallet = w; S.coins -= a; S.wd.unshift({ amt: a, wallet: w, ts: Date.now(), status: 'Pending' });
+    save(); render(); closeSheet('wdOverlay'); sfx.success(); haptic(); toast('Request submitted', 'ok');
+  };
+  $('histBtn').onclick = function () {
+    var box = $('histList');
+    if (!S.wd.length) box.innerHTML = '<p class="muted" style="padding:18px 0;text-align:center">No requests yet.</p>';
+    else box.innerHTML = S.wd.map(function (r) {
+      return '<div class="list-item"><div><b>' + fmt(r.amt) + ' ' + CFG.COIN + '</b><div class="muted">' + new Date(r.ts).toLocaleString() + '</div></div><span class="coin">' + r.status + '</span></div>';
+    }).join('');
+    openSheet('histOverlay');
+  };
+  $('histClose').onclick = function () { closeSheet('histOverlay'); };
+  ['wdOverlay', 'histOverlay'].forEach(function (id) {
+    $(id).addEventListener('click', function (e) { if (e.target === this) closeSheet(id); });
+  });
+
+  /* ---------- Invite ---------- */
+  var refUrl = 'https://t.me/' + CFG.BOT + '?start=' + uid;
+  $('refLink').textContent = refUrl;
+  function copyText(txt) {
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
+    }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).catch(fallback); else fallback(); } catch (e) { fallback(); }
+  }
+  $('copyRef').onclick = function () { copyText(refUrl); sfx.success(); toast('Link copied', 'ok'); };
+  $('shareRef').onclick = function () {
+    var text = 'Join Miner Pro and start mining!';
+    var url = 'https://t.me/share/url?url=' + encodeURIComponent(refUrl) + '&text=' + encodeURIComponent(text);
+    try { if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank'); } catch (e) { window.open(url, '_blank'); }
+  };
+
+  /* ---------- Sound toggle ---------- */
+  $('soundBtn').onclick = function () {
+    S.sound = !S.sound; save(); render();
+    if (S.sound) sfx.success();
+  };
+
+  /* ---------- Welcome ---------- */
+  $('enterBtn').onclick = function () {
+    audio(); sfx.welcome(); haptic();
+    $('welcome').classList.remove('show');
+  };
+
+  /* ---------- Render ---------- */
+  function renderText() {
+    var r = rate(), un = accrued(), st = mineState();
+    $('balance').textContent = fmt(S.coins);
+    $('hRate').textContent = r + '/h';
+    $('hEarned').textContent = fmt(S.earned);
+    $('dailyAmt').textContent = CFG.DAILY;
+
+    var dl = S.daily + 864e5 - Date.now();
+    $('dailyBtn').disabled = dl > 0;
+    $('dailyInfo').textContent = dl > 0 ? 'Next in ' + hms(dl) : 'Ready to claim';
+
+    $('hMineState').textContent = st === 'idle' ? 'Idle' : st === 'running' ? 'Mining · ' + fmt(un, 2) + ' ' + CFG.COIN : 'Ready to claim';
+
+    $('mUnclaimed').textContent = fmt(un, 4);
+    $('mRate').textContent = r; $('mHours').textContent = CFG.SESSION_HOURS;
+    var btn = $('mineBtn');
+    if (st === 'idle') {
+      btn.textContent = 'Start mining'; btn.disabled = false;
+      $('mStatus').textContent = 'Idle'; $('mTimer').textContent = 'Start mining to earn.'; $('mBar').style.width = '0%';
+    } else if (st === 'running') {
+      btn.textContent = 'Mining…'; btn.disabled = true;
+      $('mStatus').textContent = 'Running'; $('mTimer').textContent = 'Time left: ' + hms(S.mineEnd - Date.now());
+      $('mBar').style.width = Math.min(100, (1 - (S.mineEnd - Date.now()) / (CFG.SESSION_HOURS * 36e5)) * 100) + '%';
+    } else {
+      btn.textContent = 'Claim ' + fmt(un) + ' ' + CFG.COIN; btn.disabled = false;
+      $('mStatus').textContent = 'Finished'; $('mTimer').textContent = 'Session complete. Claim your coins!'; $('mBar').style.width = '100%';
+    }
+
+    $('hName').textContent = fullName; $('hUser').textContent = uname;
+    $('yName').textContent = fullName; $('yId').textContent = tu ? 'ID ' + uid : '';
+    $('wName').textContent = 'Welcome, ' + fullName + '!';
+    $('walletText').textContent = S.wallet ? shortAddr(S.wallet) : 'Add wallet';
+    $('walletInput').value = document.activeElement === $('walletInput') ? $('walletInput').value : S.wallet;
+
+    var wdSum = S.wd.reduce(function (a, b) { return a + b.amt; }, 0);
+    $('yEarned').textContent = fmt(S.earned, 4) + ' ' + CFG.COIN;
+    $('yWd').textContent = fmt(wdSum, 4) + ' ' + CFG.COIN;
+    $('yRefs').textContent = '0 active';
+    $('soundInfo').textContent = S.sound ? 'On' : 'Off';
+    $('soundIcon').textContent = S.sound ? '🔊' : '🔇';
+  }
+
+  function render() { renderText(); renderTasks(); renderRigs(); }
+
+  // প্রতি সেকেন্ডে শুধু লেখা বদলায়, বাটন নতুন করে আঁকা হয় না (যাতে ক্লিক মিস না হয়)
+  function tick() {
+    renderText();
+    var waiting = TASKS.some(function (t) {
+      var st = S.tasks[t.id];
+      return st && st.t && !st.done && (Date.now() - st.t) < (CFG.VERIFY_SECONDS + 2) * 1000;
+    });
+    if (waiting) renderTasks();
+  }
+
+  setAvatar($('hAvatar')); setAvatar($('yAvatar')); setAvatar($('wAvatar'));
+  render();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+  </html>
