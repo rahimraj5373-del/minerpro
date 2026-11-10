@@ -13,7 +13,9 @@ wrangler secret put BOT_TOKEN            # token of @CryptMinerPro_bot from @Bot
 wrangler deploy                          # prints https://minerpro-referrals.<you>.workers.dev
 ```
 
-Then in `index.html` set:
+Deployed at https://minerpro-referrals.rahimraj5373.workers.dev (D1 `minerpro-referrals`). To redeploy, run `wrangler deploy` here.
+
+Then in `js/app.js` (`CFG`) set:
 
 ```js
 REF_API: 'https://minerpro-referrals.<you>.workers.dev',

@@ -20,21 +20,15 @@
     // Live market card (DexScreener). TOKEN = jetton master address on TON.
     MARKET: { NAME: 'Grouche Coin', SYMBOL: 'GRC', CHAIN: 'ton', TOKEN: 'EQAu7qxfVgMg0tpnosBpARYOG--W1EUuX_5H_vOQtTVuHnrn', REFRESH_SECONDS: 60 },
 
-    // Adsgram (https://adsgram.ai): put your block ID here to enable the "Watch & click" task.
-    ADSGRAM_BLOCK_ID: '',
-    AD_REWARD: 10,
-    AD_LIMIT: 8,
-    AD_WINDOW_HOURS: 12,
-
     // TON Connect manifest (must be publicly reachable)
     TONCONNECT_MANIFEST: 'https://rahimraj5373-del.github.io/minerpro/tonconnect-manifest.json',
 
     REF_REWARD: 200,     // coins for the inviter, per successful referral
     REF_BONUS: 50,       // welcome bonus for the invited friend
     // Mini App short name from @BotFather (/newapp). If set, links open the app directly: t.me/BOT/APP?startapp=ref_ID
-    APP_NAME: '',
+    APP_NAME: 'minerpro',
     // Referral server URL (see referral-worker/). Empty = referrals are stored only on this device (demo mode).
-    REF_API: '',
+    REF_API: 'https://minerpro-referrals.rahimraj5373.workers.dev',
     REF_SYNC_SECONDS: 30
   };
 
@@ -51,7 +45,7 @@
   ];
 
   var FAQ = [
-    ['How do I earn ' + CFG.COIN + '?', 'Complete quests, claim the daily bonus, watch ads, invite friends and run cloud miner packages.'],
+    ['How do I earn ' + CFG.COIN + '?', 'Complete quests, claim the daily bonus, invite friends and run cloud miner packages.'],
     ['How does cloud mining work?', 'Buy a miner package with your balance. It mines a fixed amount every day for its duration. Tap "Claim to Withdraw" to move mined coins to your balance.'],
     ['How do referrals work?', 'Share your invite link. When a new user opens the app with it, you get +' + CFG.REF_REWARD + ' ' + CFG.COIN + ' and your friend gets +' + CFG.REF_BONUS + ' ' + CFG.COIN + '.'],
     ['How do I withdraw?', 'Connect your TON wallet, then tap "Withdraw" on Home. The minimum is ' + CFG.MIN_WITHDRAW + ' ' + CFG.COIN + '. Requests are reviewed and paid to your wallet.'],
@@ -75,7 +69,7 @@
   var S = {
     coins: 0, earned: 0,
     pkgs: {}, unclaimed: 0, mineAt: 0,
-    tasks: {}, daily: 0, ads: { start: 0, n: 0 },
+    tasks: {}, daily: 0,
     wallet: '', wd: [], sound: true,
     refBy: '', refChecked: false, refCount: 0, refCredited: 0, refEarned: 0, refFriends: []
   };
@@ -156,18 +150,19 @@
     o.start(t); o.stop(t + dur + 0.03);
   }
   // ক্লিকের শব্দ একবারই তৈরি হয়ে মেমোরিতে থাকে, তাই প্রতিবার বাজাতে কোনো ল্যাগ হয় না
+  // soft "pop": a sine that glides down from ~900 Hz, smooth 2 ms attack, ~80 ms decay, low-passed so it never sounds harsh
   function buildClick(a) {
-    var sr = a.sampleRate, n = Math.floor(sr * 0.16), b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
-    var p1 = 0, p2 = 0;
+    var sr = a.sampleRate, n = Math.floor(sr * 0.09), b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
+    var ph = 0, lp = 0, k = 1 - Math.exp(-2 * Math.PI * 3500 / sr), peak = 0;
     for (var i = 0; i < n; i++) {
       var t = i / sr;
-      var f = 520 + 1300 * Math.exp(-t * 38);
-      p1 += 2 * Math.PI * f / sr; p2 += 2 * Math.PI * 1760 / sr;
-      var pop = Math.sin(p1) * Math.exp(-t * 42) * 0.55;
-      var tick = (Math.random() * 2 - 1) * Math.exp(-t * 1200) * 0.35;
-      var shine = t > 0.018 ? Math.sin(p2) * Math.exp(-(t - 0.018) * 28) * 0.16 : 0;
-      d[i] = pop + tick + shine;
+      ph += 2 * Math.PI * (280 + 620 * Math.exp(-t * 60)) / sr;
+      var env = (1 - Math.exp(-t * 900)) * Math.exp(-t * 48);
+      var x = (Math.sin(ph) + 0.18 * Math.sin(2 * ph) * Math.exp(-t * 70)) * env;
+      lp += k * (x - lp); d[i] = lp;
+      if (Math.abs(lp) > peak) peak = Math.abs(lp);
     }
+    for (var j = 0; j < n; j++) d[j] *= 0.9 / peak;
     return b;
   }
   function unlockAudio() {
@@ -185,8 +180,8 @@
     unlockAudio(); if (!ac || !clickBuf) return;
     var src = ac.createBufferSource(), g = ac.createGain();
     src.buffer = clickBuf;
-    src.playbackRate.value = 0.95 + Math.random() * 0.1;
-    g.gain.value = 0.55;
+    src.playbackRate.value = 0.97 + Math.random() * 0.06;
+    g.gain.value = 0.4;
     src.connect(g); g.connect(master);
     src.start(0);
   }
@@ -339,7 +334,6 @@
       }
       d.appendChild(b); boxes[t.group].appendChild(d);
     });
-    if (adState().n < CFG.AD_LIMIT) open++;
     if (S.daily + 864e5 <= Date.now()) open++;
     $('openTasks').textContent = open;
   }
@@ -350,38 +344,6 @@
     if (left > 0) { sfx.error(); toast('Come back in ' + hms(left), 'err'); return; }
     S.daily = Date.now(); addCoins(CFG.DAILY);
     save(); render(); sfx.success(); haptic(); toast('+' + CFG.DAILY + ' ' + CFG.COIN + ' daily bonus', 'ok');
-  };
-
-  /* ---------- Adsgram ---------- */
-  function adState() {
-    var w = CFG.AD_WINDOW_HOURS * 36e5;
-    // window starts with the first rewarded ad, not when the app is opened
-    if (!S.ads || (S.ads.start && Date.now() - S.ads.start >= w)) S.ads = { start: 0, n: 0 };
-    return S.ads;
-  }
-  var adCtl = null, adBusy = false;
-  function loadAdsgram(cb) {
-    if (window.Adsgram) return cb();
-    var s = document.createElement('script'); s.src = 'https://sad.adsgram.ai/js/sad.min.js';
-    s.onload = function () { cb(); }; s.onerror = function () { cb(new Error('load')); };
-    document.head.appendChild(s);
-  }
-  $('adBtn').onclick = function () {
-    var st = adState();
-    if (st.n >= CFG.AD_LIMIT) { sfx.error(); toast('Limit reached. Resets in ' + hms(st.start + CFG.AD_WINDOW_HOURS * 36e5 - Date.now()), 'err'); return; }
-    if (!CFG.ADSGRAM_BLOCK_ID) { sfx.error(); toast('Ads are not available yet. Check back soon!', 'err'); return; }
-    if (adBusy) return; adBusy = true;
-    loadAdsgram(function (err) {
-      if (err || !window.Adsgram) { adBusy = false; sfx.error(); toast('Could not load ad', 'err'); return; }
-      try { adCtl = adCtl || window.Adsgram.init({ blockId: CFG.ADSGRAM_BLOCK_ID }); } catch (e) { adBusy = false; toast('Could not load ad', 'err'); return; }
-      adCtl.show().then(function (r) {
-        adBusy = false;
-        if (r && r.done) {
-          var s2 = adState(); if (!s2.n) s2.start = Date.now(); s2.n++; addCoins(CFG.AD_REWARD);
-          save(); render(); sfx.success(); haptic(); toast('+' + CFG.AD_REWARD + ' ' + CFG.COIN + ' ad reward', 'ok');
-        } else { sfx.error(); toast('Ad skipped — no reward', 'err'); }
-      }).catch(function (r) { adBusy = false; sfx.error(); toast((r && r.description) || 'No ad available right now', 'err'); });
-    });
   };
 
   /* ---------- Navigation ---------- */
@@ -623,12 +585,6 @@
     var dl = S.daily + 864e5 - Date.now();
     $('dailyBtn').disabled = dl > 0;
     $('dailyInfo').textContent = dl > 0 ? 'in ' + hms(dl) : 'ready';
-    var ad = adState();
-    $('adCount').textContent = ad.n; $('adMax').textContent = CFG.AD_LIMIT;
-    $('adBar').style.width = Math.min(100, ad.n / CFG.AD_LIMIT * 100) + '%';
-    $('adReset').textContent = ad.n > 0 ? 'Resets in ' + hms(ad.start + CFG.AD_WINDOW_HOURS * 36e5 - Date.now()) : 'Resets every ' + CFG.AD_WINDOW_HOURS + ' hours';
-    $('adBtn').disabled = ad.n >= CFG.AD_LIMIT;
-    $('adBtn').textContent = ad.n >= CFG.AD_LIMIT ? 'Limit reached' : 'Watch ad';
 
     // Mine
     $('mUnclaimed').textContent = fmt(un, 4);
@@ -683,7 +639,7 @@
   setAll('.appTitle', CFG.APP_TITLE);
   setAll('.coinSym', CFG.COIN);
   setAll('.refRewardTxt', CFG.REF_REWARD); setAll('.refBonusTxt', CFG.REF_BONUS);
-  $('dailyAmt').textContent = CFG.DAILY; $('adReward').textContent = CFG.AD_REWARD;
+  $('dailyAmt').textContent = CFG.DAILY;
   if (!S.mineAt) S.mineAt = Date.now();
   setAvatar($('hAvatar')); setAvatar($('yAvatar'));
   if (!S.wallet) showGate();
