@@ -694,12 +694,15 @@
   };
   var refStore = CFG.REF_API ? remoteRef : localRef;
 
+  var registering = false;
   function registerReferral(done) {
-    if (S.refChecked) return done();
+    if (S.refChecked || registering) return done();
     var ref = inviterId();
     if (!ref || Date.now() - S.joined > 864e5) { S.refChecked = true; save(); return done(); }   // শুধু নতুন ইউজার রেফারেল হিসেবে গণ্য হবে
+    registering = true;
     refStore.register(ref, function (res) {
-      if (res) {   // res না থাকলে সার্ভারে পৌঁছানো যায়নি — পরের বার আবার চেষ্টা হবে
+      registering = false;
+      if (res && !S.refChecked) {   // res না থাকলে সার্ভারে পৌঁছানো যায়নি — পরের বার আবার চেষ্টা হবে
         S.refChecked = true;
         if (res.ok) {
           S.refBy = res.referredBy || ref; addCoins(CFG.REF_BONUS);
