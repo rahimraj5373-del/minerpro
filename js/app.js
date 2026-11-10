@@ -483,14 +483,14 @@
     var a = parseFloat($('wdAmount').value);
     if (!(a >= CFG.MIN_WITHDRAW)) { sfx.error(); toast('Minimum withdraw is ' + CFG.MIN_WITHDRAW + ' ' + CFG.COIN, 'err'); return; }
     if (a > S.coins) { sfx.error(); toast('Not enough balance', 'err'); return; }
-    S.coins -= a; S.wd.unshift({ amt: a, wallet: S.wallet, ts: Date.now(), status: 'Pending' });
+    S.coins -= a; S.wd.unshift({ amt: a, coin: CFG.COIN, wallet: S.wallet, ts: Date.now(), status: 'Pending' });
     save(); render(); closeSheet('wdSheet'); sfx.success(); haptic(); toast('Request submitted', 'ok');
   };
   function renderHistory() {
     var box = $('histList');
     if (!S.wd.length) { box.innerHTML = '<p class="muted empty">No requests yet.</p>'; return; }
     box.innerHTML = S.wd.map(function (r) {
-      return '<div class="li"><span class="sq-ic gold-t">' + icon('i-up') + '</span><div class="grow"><b>' + fmt(r.amt) + ' ' + CFG.COIN + '</b><div class="muted small">' + new Date(r.ts).toLocaleString() + ' · ' + esc(shortAddr(r.wallet || '')) + '</div></div><span class="pill">' + esc(r.status) + '</span></div>';
+      return '<div class="li"><span class="sq-ic gold-t">' + icon('i-up') + '</span><div class="grow"><b>' + fmt(r.amt) + ' ' + esc(r.coin || 'MPC') + '</b><div class="muted small">' + new Date(r.ts).toLocaleString() + ' · ' + esc(shortAddr(r.wallet || '')) + '</div></div><span class="pill">' + esc(r.status) + '</span></div>';
     }).join('');
   }
 
