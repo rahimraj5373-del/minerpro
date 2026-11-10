@@ -1,0 +1,32 @@
+# Miner Pro referral server
+
+The web app is a static GitHub Pages site, so referrals between *different* users need a small server.
+This Cloudflare Worker (free tier is enough) verifies the Telegram user, records who invited whom, and returns each user's referral count.
+
+## Deploy
+
+```bash
+npm i -g wrangler
+wrangler login
+wrangler kv namespace create REFS        # copy the id into wrangler.toml
+wrangler secret put BOT_TOKEN            # token of @CryptMinerPro_bot from @BotFather
+wrangler deploy                          # prints https://minerpro-referrals.<you>.workers.dev
+```
+
+Then in `index.html` set:
+
+```js
+REF_API: 'https://minerpro-referrals.<you>.workers.dev',
+APP_NAME: 'your_app_short_name',   // from @BotFather /newapp, so links open the Mini App with ?startapp=ref_<id>
+```
+
+Without `REF_API` the app runs in demo mode: referrals are only stored on the current device.
+
+## API
+
+All requests are `POST` with JSON `{ "initData": Telegram.WebApp.initData }`.
+
+| Path        | Response                                   |
+|-------------|--------------------------------------------|
+| `/register` | `{ ok, referredBy }` — records the inviter from `start_param` (`ref_<id>`) once per user |
+| `/stats`    | `{ count, friends: [{ id, name, ts }] }`   |

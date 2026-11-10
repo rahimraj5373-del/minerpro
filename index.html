@@ -94,6 +94,15 @@
   .ref { display: flex; gap: 8px; align-items: center; }
   .ref code { flex: 1; min-width: 0; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  .ref-friend { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .ref-friend:last-child { border-bottom: 0; }
+  .ref-friend .avatar { width: 34px; height: 34px; font-size: 14px; border-width: 1px; }
+  .ref-friend .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ref-friend .coin { font-size: 13px; }
+  .stat b.v { color: #c8b6ff; }
+  .pop { animation: pop .45s ease; }
+  @keyframes pop { 40% { transform: scale(1.18); } }
+
   .field { width: 100%; background: rgba(0,0,0,.35); border: 1px solid var(--line); color: var(--text); border-radius: 14px; padding: 14px; font-size: 15px; margin: 6px 0 10px; outline: none; }
   .field:focus { border-color: var(--gold1); }
 
@@ -190,6 +199,20 @@
     </div>
   </div>
 
+  <div class="card violet">
+    <div class="row">
+      <div>
+        <div class="tag" style="color:#c8b6ff">Referrals</div>
+        <div class="muted" style="margin-top:4px">+<span class="refRewardTxt">200</span> MPC for every friend</div>
+      </div>
+      <button class="btn violet sm" id="goInvite">Invite</button>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="stat"><span class="tag">Friends invited</span><b class="v" id="hRefCount">0</b></div>
+      <div class="stat"><span class="tag">Points earned</span><b class="v" id="hRefEarned">0 MPC</b></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="row">
       <div>
@@ -248,11 +271,17 @@
     <button class="btn ghost" id="saveWallet">Save wallet</button>
   </div>
 
-  <div class="card">
-    <div class="tag">Invite friends</div>
-    <p class="muted" style="margin:6px 0 12px">Share your link with friends.</p>
+  <div class="card violet" id="inviteCard">
+    <div class="tag" style="color:#c8b6ff">Invite friends</div>
+    <p class="muted" style="margin:6px 0 12px">Earn <b class="coin">+<span class="refRewardTxt">200</span> MPC</b> for every friend who joins with your link. Your friend gets <b class="coin">+<span id="refBonusTxt">50</span> MPC</b>.</p>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="stat"><span class="tag">Total referrals</span><b class="v" id="yRefCount">0</b></div>
+      <div class="stat"><span class="tag">Points earned</span><b class="v" id="yRefEarned">0 MPC</b></div>
+    </div>
     <div class="ref"><code id="refLink"></code><button class="btn ghost sm" id="copyRef">Copy</button></div>
     <button class="btn violet" id="shareRef" style="margin-top:12px">Share link</button>
+    <div class="row" style="margin-top:16px"><b style="font-size:14px">Your friends</b><button class="btn ghost sm" id="refRefresh">Refresh</button></div>
+    <div id="refList"></div>
   </div>
 
   <button class="card row" id="histBtn" style="width:100%;text-align:left">
@@ -312,7 +341,15 @@
     BASE_RATE: 10,       // MPC per hour
     DAILY: 20,
     TASK_REWARD: 100,
-    VERIFY_SECONDS: 8
+    VERIFY_SECONDS: 8,
+
+    REF_REWARD: 200,     // MPC for the inviter, per successful referral
+    REF_BONUS: 50,       // MPC welcome bonus for the invited friend
+    // Mini App short name from @BotFather (/newapp). If set, links open the app directly: t.me/BOT/APP?startapp=ref_ID
+    APP_NAME: '',
+    // Referral server URL (see referral-worker/). Empty = referrals are stored only on this device (demo mode).
+    REF_API: '',
+    REF_SYNC_SECONDS: 30
   };
 
   var TASKS = [
@@ -344,12 +381,15 @@
     coins: 0, earned: 0,
     mineStart: 0, mineEnd: 0, pending: 0,
     rigs: {}, tasks: {}, daily: 0,
-    wallet: '', wd: [], sound: true
+    wallet: '', wd: [], sound: true,
+    refBy: '', refChecked: false, refCount: 0, refCredited: 0, refEarned: 0, refFriends: []
   };
+  var raw = null;
   try {
-    var raw = localStorage.getItem(KEY);
+    raw = localStorage.getItem(KEY);
     if (raw) { var o = JSON.parse(raw); for (var k in o) S[k] = o[k]; }
   } catch (e) {}
+  if (!S.joined) S.joined = raw ? 1 : Date.now();   // 1 = ইউজার এই আপডেটের আগে থেকেই আছে
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ---------- Helpers ---------- */
@@ -375,9 +415,13 @@
   }
 
   /* ---------- Sound (কোনো ফাইল লাগে না, ব্রাউজারই সুর বানায়) ---------- */
-  var ac = null;
+  var ac = null, master = null, clickBuf = null, unlocked = false;
   function audio() {
-    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (!ac) {
+      try { ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' }); }
+      catch (e) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e2) { return null; } }
+      master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+    }
     if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
     return ac;
   }
@@ -389,21 +433,73 @@
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.015);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(a.destination);
+    o.connect(g); g.connect(master);
     o.start(t); o.stop(t + dur + 0.03);
   }
+  // ক্লিকের শব্দ একবারই তৈরি হয়ে মেমোরিতে থাকে, তাই প্রতিবার বাজাতে কোনো ল্যাগ হয় না
+  function buildClick(a) {
+    var sr = a.sampleRate, n = Math.floor(sr * 0.16), b = a.createBuffer(1, n, sr), d = b.getChannelData(0);
+    var p1 = 0, p2 = 0;
+    for (var i = 0; i < n; i++) {
+      var t = i / sr;
+      var f = 520 + 1300 * Math.exp(-t * 38);              // quick downward "pop"
+      p1 += 2 * Math.PI * f / sr; p2 += 2 * Math.PI * 1760 / sr;
+      var pop = Math.sin(p1) * Math.exp(-t * 42) * 0.55;
+      var tick = (Math.random() * 2 - 1) * Math.exp(-t * 1200) * 0.35;  // crisp attack
+      var shine = t > 0.018 ? Math.sin(p2) * Math.exp(-(t - 0.018) * 28) * 0.16 : 0; // bright sparkle tail
+      d[i] = pop + tick + shine;
+    }
+    return b;
+  }
+  function unlockAudio() {
+    var a = audio(); if (!a) return;
+    if (!clickBuf) clickBuf = buildClick(a);
+    if (!unlocked) {
+      try { var s0 = a.createBufferSource(); s0.buffer = a.createBuffer(1, 1, 22050); s0.connect(a.destination); s0.start(0); } catch (e) {}
+      unlocked = true;
+    }
+  }
+  var lastClick = 0;
+  function playClick() {
+    if (!S.sound) return;
+    var now = Date.now(); if (now - lastClick < 35) return; lastClick = now;
+    unlockAudio(); if (!ac || !clickBuf) return;
+    var src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = clickBuf;
+    src.playbackRate.value = 0.95 + Math.random() * 0.1;  // ছোট্ট বৈচিত্র্য, যাতে একঘেয়ে না লাগে
+    g.gain.value = 0.55;
+    src.connect(g); g.connect(master);
+    src.start(0);
+  }
   var sfx = {
-    click:   function () { tone(660, 0, .09, 'triangle', .12); tone(990, .05, .11, 'triangle', .10); },
+    click:   playClick,
     success: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, .08 + i * .09, .25, 'sine', .16); }); },
     welcome: function () { [392, 523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * .12, .4, 'sine', .15); }); tone(1568, .72, .55, 'triangle', .08); },
-    error:   function () { tone(220, .05, .18, 'sawtooth', .07); tone(170, .17, .22, 'sawtooth', .07); }
+    error:   function () { tone(220, .05, .18, 'sawtooth', .07); tone(170, .17, .22, 'sawtooth', .07); },
+    referral: function () { [659, 784, 988, 1319, 1568].forEach(function (f, i) { tone(f, i * .07, .3, 'triangle', .12); }); }
   };
 
-  // প্রতিটি বাটনে ক্লিক করলেই সুর বাজবে
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest ? e.target.closest('button') : null;
-    if (b && !b.disabled) sfx.click();
+  // যেকোনো বাটন / লিংক / ইন্টারঅ্যাক্টিভ এলিমেন্টে চাপ দিলেই সাথে সাথে সুর বাজবে
+  var INTERACTIVE = 'button, a[href], [role="button"], summary, select, label, input[type="checkbox"], input[type="radio"], input[type="button"], input[type="submit"]';
+  function interactiveTarget(e) {
+    var el = e.target && e.target.closest ? e.target.closest(INTERACTIVE) : null;
+    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return null;
+    return el;
+  }
+  if (window.PointerEvent) {
+    document.addEventListener('pointerdown', function (e) {
+      if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (interactiveTarget(e)) playClick(); else unlockAudio();
+    }, { capture: true, passive: true });
+  } else {
+    document.addEventListener('touchstart', function (e) { if (interactiveTarget(e)) playClick(); else unlockAudio(); }, { capture: true, passive: true });
+    document.addEventListener('mousedown', function (e) { if (interactiveTarget(e)) playClick(); }, true);
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!e.repeat && (e.key === 'Enter' || e.key === ' ') && interactiveTarget(e)) playClick();
   }, true);
+  // iOS-এ অডিও চালু রাখতে প্রথম স্পর্শেই আনলক
+  ['touchend', 'click'].forEach(function (ev) { document.addEventListener(ev, unlockAudio, { capture: true, passive: true }); });
 
   /* ---------- Mining ---------- */
   function rate() {
@@ -511,6 +607,7 @@
     b.onclick = function () { show(b.getAttribute('data-page')); };
   });
   $('goMine').onclick = function () { show('mine'); };
+  $('goInvite').onclick = function () { show('you'); setTimeout(function () { $('inviteCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120); };
 
   /* ---------- Wallet ---------- */
   function shortAddr(a) { return a.length > 12 ? a.slice(0, 4) + '…' + a.slice(-4) : a; }
@@ -552,9 +649,93 @@
     $(id).addEventListener('click', function (e) { if (e.target === this) closeSheet(id); });
   });
 
-  /* ---------- Invite ---------- */
-  var refUrl = 'https://t.me/' + CFG.BOT + '?start=' + uid;
+  /* ---------- Referrals ---------- */
+  var refUrl = CFG.APP_NAME
+    ? 'https://t.me/' + CFG.BOT + '/' + CFG.APP_NAME + '?startapp=ref_' + uid
+    : 'https://t.me/' + CFG.BOT + '?start=ref_' + uid;
   $('refLink').textContent = refUrl;
+
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  // যে লিংক দিয়ে অ্যাপ খোলা হয়েছে, সেখান থেকে রেফারারের ID বের করা
+  function inviterId() {
+    var p = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+    if (!p) { try { var q = new URLSearchParams(location.search); p = q.get('tgWebAppStartParam') || q.get('startapp') || q.get('ref') || ''; } catch (e) {} }
+    p = String(p).replace(/^ref_?/, '');
+    return /^[A-Za-z0-9_-]{1,64}$/.test(p) && p !== uid ? p : '';
+  }
+
+  // Remote (server) store — counts are shared between all users.
+  var remoteRef = {
+    call: function (path, body, cb) {
+      try {
+        fetch(CFG.REF_API.replace(/\/$/, '') + path, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({ initData: (tg && tg.initData) || '' }, body || {}))
+        }).then(function (r) { return r.json(); }).then(function (j) { cb(j && !j.error ? j : null); }, function () { cb(null); });
+      } catch (e) { cb(null); }
+    },
+    register: function (ref, cb) { this.call('/register', { ref: ref }, cb); },
+    stats: function (cb) { this.call('/stats', {}, cb); }
+  };
+  // Device-only store — used when no server is configured.
+  var localRef = {
+    DB: 'minerpro_refdb',
+    load: function () { try { return JSON.parse(localStorage.getItem(this.DB)) || { users: {}, refs: {} }; } catch (e) { return { users: {}, refs: {} }; } },
+    register: function (ref, cb) {
+      var db = this.load();
+      if (db.users[uid]) return cb({ ok: false, referredBy: db.users[uid] });
+      db.users[uid] = ref;
+      (db.refs[ref] = db.refs[ref] || []).push({ id: uid, name: fullName, ts: Date.now() });
+      try { localStorage.setItem(this.DB, JSON.stringify(db)); } catch (e) {}
+      cb({ ok: true, referredBy: ref });
+    },
+    stats: function (cb) { var f = this.load().refs[uid] || []; cb({ count: f.length, friends: f }); }
+  };
+  var refStore = CFG.REF_API ? remoteRef : localRef;
+
+  function registerReferral() {
+    if (S.refChecked) return;
+    var ref = inviterId();
+    if (!ref || Date.now() - S.joined > 864e5) { S.refChecked = true; save(); return; }   // শুধু নতুন ইউজার রেফারেল হিসেবে গণ্য হবে
+    refStore.register(ref, function (res) {
+      if (!res) return;   // সার্ভারে পৌঁছানো যায়নি — পরের বার আবার চেষ্টা হবে
+      S.refChecked = true;
+      if (res.ok) {
+        S.refBy = res.referredBy || ref; addCoins(CFG.REF_BONUS);
+        save(); render(); sfx.referral(); haptic(); toast('🎉 Invited by a friend: +' + CFG.REF_BONUS + ' ' + CFG.COIN, 'ok');
+      } else { save(); }
+    });
+  }
+
+  var syncing = false;
+  function syncReferrals(manual) {
+    if (syncing) return; syncing = true;
+    refStore.stats(function (res) {
+      syncing = false;
+      if (!res) { if (manual) { sfx.error(); toast('Could not load referrals', 'err'); } return; }
+      var count = Math.max(0, parseInt(res.count, 10) || 0);
+      S.refFriends = (res.friends || []).slice(-50);
+      if (count > S.refCredited) {
+        var gain = (count - S.refCredited) * CFG.REF_REWARD;
+        addCoins(gain); S.refEarned += gain; S.refCredited = count;
+        save(); render(); sfx.referral(); haptic();
+        toast('+' + fmt(gain, 0) + ' ' + CFG.COIN + ' · ' + (count - S.refCount) + ' new referral' + (count - S.refCount === 1 ? '' : 's') + '!', 'ok');
+        ['hRefCount', 'yRefCount'].forEach(function (id) { var el = $(id); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); });
+      } else if (manual) { toast(count ? 'Referrals up to date' : 'No referrals yet — share your link!', 'ok'); }
+      S.refCount = count; save(); renderText(); renderRefList();
+    });
+  }
+
+  function renderRefList() {
+    var box = $('refList');
+    if (!S.refFriends.length) { box.innerHTML = '<p class="muted" style="padding:12px 0 2px;text-align:center">No friends yet. Share your link to start earning.</p>'; return; }
+    box.innerHTML = S.refFriends.slice().reverse().map(function (f) {
+      var n = f.name || ('User ' + f.id);
+      return '<div class="ref-friend"><div class="avatar">' + esc(n.charAt(0).toUpperCase()) + '</div><div class="grow"><b>' + esc(n) + '</b><div class="muted">' + (f.ts ? new Date(f.ts).toLocaleDateString() : '') + '</div></div><span class="coin">+' + CFG.REF_REWARD + '</span></div>';
+    }).join('');
+  }
+
   function copyText(txt) {
     function fallback() {
       var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -564,10 +745,16 @@
   }
   $('copyRef').onclick = function () { copyText(refUrl); sfx.success(); toast('Link copied', 'ok'); };
   $('shareRef').onclick = function () {
-    var text = 'Join Miner Pro and start mining!';
+    var text = 'Join Miner Pro and start mining! Get +' + CFG.REF_BONUS + ' ' + CFG.COIN + ' bonus with my link.';
     var url = 'https://t.me/share/url?url=' + encodeURIComponent(refUrl) + '&text=' + encodeURIComponent(text);
-    try { if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank'); } catch (e) { window.open(url, '_blank'); }
+    try {
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
+      else if (navigator.share) navigator.share({ title: 'Miner Pro', text: text, url: refUrl }).catch(function () {});
+      else window.open(url, '_blank');
+    } catch (e) { window.open(url, '_blank'); }
   };
+  $('refRefresh').onclick = function () { syncReferrals(true); };
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) syncReferrals(); });
 
   /* ---------- Sound toggle ---------- */
   $('soundBtn').onclick = function () {
@@ -619,7 +806,9 @@
     var wdSum = S.wd.reduce(function (a, b) { return a + b.amt; }, 0);
     $('yEarned').textContent = fmt(S.earned, 4) + ' ' + CFG.COIN;
     $('yWd').textContent = fmt(wdSum, 4) + ' ' + CFG.COIN;
-    $('yRefs').textContent = '0 active';
+    $('yRefs').textContent = S.refCount + (S.refCount === 1 ? ' friend' : ' friends') + ' · ' + fmt(S.refEarned, 0) + ' ' + CFG.COIN;
+    $('hRefCount').textContent = S.refCount; $('yRefCount').textContent = S.refCount;
+    $('hRefEarned').textContent = fmt(S.refEarned, 0) + ' ' + CFG.COIN; $('yRefEarned').textContent = fmt(S.refEarned, 0) + ' ' + CFG.COIN;
     $('soundInfo').textContent = S.sound ? 'On' : 'Off';
     $('soundIcon').textContent = S.sound ? '🔊' : '🔇';
   }
@@ -637,8 +826,12 @@
   }
 
   setAvatar($('hAvatar')); setAvatar($('yAvatar')); setAvatar($('wAvatar'));
-  render();
+  document.querySelectorAll('.refRewardTxt').forEach(function (el) { el.textContent = CFG.REF_REWARD; });
+  $('refBonusTxt').textContent = CFG.REF_BONUS;
+  render(); renderRefList();
+  registerReferral(); syncReferrals();
   setInterval(tick, 1000);
+  setInterval(function () { if (!document.hidden) syncReferrals(); }, CFG.REF_SYNC_SECONDS * 1000);
 })();
 </script>
 </body>
