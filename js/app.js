@@ -416,7 +416,19 @@
 
   /* ---------- Wallet (TON Connect) ---------- */
   function shortAddr(a) { return a && a.length > 12 ? a.slice(0, 4) + '…' + a.slice(-4) : a; }
-  function validAddr(a) { return /^[A-Za-z0-9_-]{48}$/.test(a) || /^-?\d:[0-9a-fA-F]{64}$/.test(a); }
+  // user-friendly TON address: base64url(flag, workchain, 32-byte hash, CRC16-XMODEM)
+  function validAddr(a) {
+    if (/^-?\d:[0-9a-fA-F]{64}$/.test(a)) return true;
+    if (!/^[A-Za-z0-9_+/-]{48}$/.test(a)) return false;
+    var bin; try { bin = atob(a.replace(/-/g, '+').replace(/_/g, '/')); } catch (e) { return false; }
+    if (bin.length !== 36) return false;
+    var crc = 0;
+    for (var i = 0; i < 34; i++) {
+      crc ^= bin.charCodeAt(i) << 8;
+      for (var j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    }
+    return crc === ((bin.charCodeAt(34) << 8) | bin.charCodeAt(35));
+  }
   var tc = null;
   function friendly(acc) {
     try { return window.TON_CONNECT_UI.toUserFriendlyAddress(acc.address, acc.chain === '-3'); } catch (e) { return acc.address; }
