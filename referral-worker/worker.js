@@ -1,6 +1,6 @@
-// Miner Pro referral server (Cloudflare Worker + KV).
+// Miner Pro referral server (Cloudflare Worker + D1).
 // Verifies Telegram Mini App initData, records who invited whom, and returns referral stats.
-// Bindings: KV namespace REFS, secret BOT_TOKEN, optional var ALLOWED_ORIGIN.
+// Bindings: D1 database DB, secret BOT_TOKEN, optional var ALLOWED_ORIGIN.
 
 const MAX_AGE_SECONDS = 7 * 24 * 3600;
 const enc = new TextEncoder();
@@ -42,17 +42,15 @@ function json(body, status, origin) {
   });
 }
 
-// Each referral is its own key (`ref:<inviter>:<friend>`), so concurrent registrations never overwrite each other.
-async function getFriends(env, id) {
-  const friends = [];
-  let cursor;
-  do {
-    const page = await env.REFS.list({ prefix: `ref:${id}:`, cursor });
-    for (const k of page.keys) friends.push({ id: k.name.split(':')[2], name: (k.metadata && k.metadata.name) || '', ts: (k.metadata && k.metadata.ts) || 0 });
-    cursor = page.list_complete ? undefined : page.cursor;
-  } while (cursor);
-  return friends.sort((a, b) => a.ts - b.ts);
-}
+// One row per user; the PRIMARY KEY makes the first INSERT win atomically,
+// so a user can only ever be recorded once and only one inviter is credited.
+const SCHEMA = 'CREATE TABLE IF NOT EXISTS users (uid TEXT PRIMARY KEY, inviter TEXT, name TEXT, ts INTEGER NOT NULL)';
+const INDEX = 'CREATE INDEX IF NOT EXISTS users_inviter ON users (inviter, ts)';
+let ready;
+const init = (db) => (ready ||= db.batch([db.prepare(SCHEMA), db.prepare(INDEX)]).catch((e) => { ready = null; throw e; }));
+
+const insertUser = (db, uid, inviter, name) =>
+  db.prepare('INSERT OR IGNORE INTO users (uid, inviter, name, ts) VALUES (?1, ?2, ?3, ?4)').bind(uid, inviter, name, Date.now()).run();
 
 export default {
   async fetch(request, env) {
@@ -68,31 +66,28 @@ export default {
     const uid = String(auth.user.id);
     const path = new URL(request.url).pathname.replace(/\/$/, '');
 
-    if (path.endsWith('/register')) {
-      // `by:<uid>` is set on a user's first contact (register or stats), so only brand-new users can be referred.
-      const existing = await env.REFS.get(`by:${uid}`);
-      if (existing) return json({ ok: false, referredBy: existing === '-' ? '' : existing }, 200, origin);
+    const db = env.DB;
+    await init(db);
+    const name = [auth.user.first_name, auth.user.last_name].filter(Boolean).join(' ').slice(0, 64);
 
+    if (path.endsWith('/register')) {
       // Only the signed start_param is trusted (requires the t.me/<bot>/<app>?startapp=ref_<id> link).
       const ref = String(auth.startParam || '').replace(/^ref_?/, '');
-      if (!/^\d{1,20}$/.test(ref) || ref === uid) {
-        await env.REFS.put(`by:${uid}`, '-');
-        return json({ ok: false, referredBy: '' }, 200, origin);
-      }
-      const name = [auth.user.first_name, auth.user.last_name].filter(Boolean).join(' ').slice(0, 64);
-      // Write the referral before `by:` so a failed second write can be retried safely (puts are idempotent).
-      await env.REFS.put(`ref:${ref}:${uid}`, '1', { metadata: { name, ts: Date.now() } });
-      await env.REFS.put(`by:${uid}`, ref);
-      return json({ ok: true, referredBy: ref }, 200, origin);
+      const inviter = /^\d{1,20}$/.test(ref) && ref !== uid ? ref : null;
+      // Users already seen (by register or stats) are ignored, so only brand-new users can be referred.
+      const res = await insertUser(db, uid, inviter, name);
+      if (res.meta.changes === 1) return json({ ok: !!inviter, referredBy: inviter || '' }, 200, origin);
+      const row = await db.prepare('SELECT inviter FROM users WHERE uid = ?1').bind(uid).first();
+      return json({ ok: false, referredBy: (row && row.inviter) || '' }, 200, origin);
     }
 
     if (path.endsWith('/stats')) {
-      if (!(await env.REFS.get(`by:${uid}`))) await env.REFS.put(`by:${uid}`, '-');
-      // Only count friends whose single `by:` record points at this inviter, so one user can never credit two inviters.
-      const all = await getFriends(env, uid);
-      const owners = await Promise.all(all.map((f) => env.REFS.get(`by:${f.id}`)));
-      const friends = all.filter((f, i) => owners[i] === uid);
-      return json({ count: friends.length, friends: friends.slice(-50) }, 200, origin);
+      await insertUser(db, uid, null, name);
+      const c = await db.prepare('SELECT COUNT(*) AS n FROM users WHERE inviter = ?1').bind(uid).first();
+      const { results } = await db
+        .prepare('SELECT uid AS id, name, ts FROM users WHERE inviter = ?1 ORDER BY ts DESC LIMIT 50')
+        .bind(uid).all();
+      return json({ count: (c && c.n) || 0, friends: results.reverse() }, 200, origin);
     }
 
     return json({ error: 'not_found' }, 404, origin);

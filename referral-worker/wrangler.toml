@@ -5,6 +5,7 @@ compatibility_date = "2024-09-01"
 [vars]
 ALLOWED_ORIGIN = "https://rahimraj5373-del.github.io"
 
-[[kv_namespaces]]
-binding = "REFS"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+[[d1_databases]]
+binding = "DB"
+database_name = "minerpro-referrals"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
