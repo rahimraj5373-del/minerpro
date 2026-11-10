@@ -712,6 +712,11 @@
 
   var syncing = false;
   function syncReferrals(manual) {
+    // রেজিস্ট্রেশন সফল না হওয়া পর্যন্ত stats ডাকা হবে না, নাহলে সার্ভার ইউজারকে "পুরনো" ধরে নেবে
+    if (!S.refChecked) return registerReferral(function () {
+      if (S.refChecked) syncReferrals(manual);
+      else if (manual) { sfx.error(); toast('Could not load referrals', 'err'); }
+    });
     if (syncing) return; syncing = true;
     refStore.stats(function (res) {
       syncing = false;
@@ -831,7 +836,7 @@
   document.querySelectorAll('.refRewardTxt').forEach(function (el) { el.textContent = CFG.REF_REWARD; });
   $('refBonusTxt').textContent = CFG.REF_BONUS;
   render(); renderRefList();
-  registerReferral(function () { syncReferrals(); });
+  syncReferrals();
   setInterval(tick, 1000);
   setInterval(function () { if (!document.hidden) syncReferrals(); }, CFG.REF_SYNC_SECONDS * 1000);
 })();
