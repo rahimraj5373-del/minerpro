@@ -460,7 +460,7 @@
     p.then(function () { return c.openModal(); }).catch(function () { openSheet('manualSheet'); });
   }
   $('gateConnect').onclick = connectWallet;
-  $('gateManual').onclick = function () { $('manualInput').value = ''; openSheet('manualSheet'); };
+  $('gateManual').onclick = $('manualWallet').onclick = function () { $('manualInput').value = ''; openSheet('manualSheet'); };
   $('changeWallet').onclick = connectWallet;
   $$('.walletChip').forEach(function (b) { b.onclick = function () { if (S.wallet) show('you'); else connectWallet(); }; });
   $('manualSave').onclick = function () {
