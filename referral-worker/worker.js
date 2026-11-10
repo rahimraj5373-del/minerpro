@@ -88,7 +88,10 @@ export default {
 
     if (path.endsWith('/stats')) {
       if (!(await env.REFS.get(`by:${uid}`))) await env.REFS.put(`by:${uid}`, '-');
-      const friends = await getFriends(env, uid);
+      // Only count friends whose single `by:` record points at this inviter, so one user can never credit two inviters.
+      const all = await getFriends(env, uid);
+      const owners = await Promise.all(all.map((f) => env.REFS.get(`by:${f.id}`)));
+      const friends = all.filter((f, i) => owners[i] === uid);
       return json({ count: friends.length, friends: friends.slice(-50) }, 200, origin);
     }
 
