@@ -17,8 +17,11 @@ Then in `index.html` set:
 
 ```js
 REF_API: 'https://minerpro-referrals.<you>.workers.dev',
-APP_NAME: 'your_app_short_name',   // from @BotFather /newapp, so links open the Mini App with ?startapp=ref_<id>
+APP_NAME: 'your_app_short_name',   // required: from @BotFather /newapp, so links open the Mini App with ?startapp=ref_<id>
 ```
+
+The server only trusts the inviter ID inside Telegram's signed `start_param`, which is only present for `startapp` links, so `APP_NAME` must be set.
+Only users the server has never seen before can be counted as referrals.
 
 Without `REF_API` the app runs in demo mode: referrals are only stored on the current device.
 

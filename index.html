@@ -675,7 +675,7 @@
         }).then(function (r) { return r.json(); }).then(function (j) { cb(j && !j.error ? j : null); }, function () { cb(null); });
       } catch (e) { cb(null); }
     },
-    register: function (ref, cb) { this.call('/register', { ref: ref }, cb); },
+    register: function (ref, cb) { this.call('/register', {}, cb); },
     stats: function (cb) { this.call('/stats', {}, cb); }
   };
   // Device-only store — used when no server is configured.
@@ -694,17 +694,19 @@
   };
   var refStore = CFG.REF_API ? remoteRef : localRef;
 
-  function registerReferral() {
-    if (S.refChecked) return;
+  function registerReferral(done) {
+    if (S.refChecked) return done();
     var ref = inviterId();
-    if (!ref || Date.now() - S.joined > 864e5) { S.refChecked = true; save(); return; }   // শুধু নতুন ইউজার রেফারেল হিসেবে গণ্য হবে
+    if (!ref || Date.now() - S.joined > 864e5) { S.refChecked = true; save(); return done(); }   // শুধু নতুন ইউজার রেফারেল হিসেবে গণ্য হবে
     refStore.register(ref, function (res) {
-      if (!res) return;   // সার্ভারে পৌঁছানো যায়নি — পরের বার আবার চেষ্টা হবে
-      S.refChecked = true;
-      if (res.ok) {
-        S.refBy = res.referredBy || ref; addCoins(CFG.REF_BONUS);
-        save(); render(); sfx.referral(); haptic(); toast('🎉 Invited by a friend: +' + CFG.REF_BONUS + ' ' + CFG.COIN, 'ok');
-      } else { save(); }
+      if (res) {   // res না থাকলে সার্ভারে পৌঁছানো যায়নি — পরের বার আবার চেষ্টা হবে
+        S.refChecked = true;
+        if (res.ok) {
+          S.refBy = res.referredBy || ref; addCoins(CFG.REF_BONUS);
+          save(); render(); sfx.referral(); haptic(); toast('🎉 Invited by a friend: +' + CFG.REF_BONUS + ' ' + CFG.COIN, 'ok');
+        } else { save(); }
+      }
+      done();
     });
   }
 
@@ -829,7 +831,7 @@
   document.querySelectorAll('.refRewardTxt').forEach(function (el) { el.textContent = CFG.REF_REWARD; });
   $('refBonusTxt').textContent = CFG.REF_BONUS;
   render(); renderRefList();
-  registerReferral(); syncReferrals();
+  registerReferral(function () { syncReferrals(); });
   setInterval(tick, 1000);
   setInterval(function () { if (!document.hidden) syncReferrals(); }, CFG.REF_SYNC_SECONDS * 1000);
 })();
