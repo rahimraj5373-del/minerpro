@@ -355,7 +355,8 @@
   /* ---------- Adsgram ---------- */
   function adState() {
     var w = CFG.AD_WINDOW_HOURS * 36e5;
-    if (!S.ads || Date.now() - S.ads.start >= w) S.ads = { start: Date.now(), n: 0 };
+    // window starts with the first rewarded ad, not when the app is opened
+    if (!S.ads || (S.ads.start && Date.now() - S.ads.start >= w)) S.ads = { start: 0, n: 0 };
     return S.ads;
   }
   var adCtl = null, adBusy = false;
@@ -376,7 +377,7 @@
       adCtl.show().then(function (r) {
         adBusy = false;
         if (r && r.done) {
-          var s2 = adState(); s2.n++; addCoins(CFG.AD_REWARD);
+          var s2 = adState(); if (!s2.n) s2.start = Date.now(); s2.n++; addCoins(CFG.AD_REWARD);
           save(); render(); sfx.success(); haptic(); toast('+' + CFG.AD_REWARD + ' ' + CFG.COIN + ' ad reward', 'ok');
         } else { sfx.error(); toast('Ad skipped — no reward', 'err'); }
       }).catch(function (r) { adBusy = false; sfx.error(); toast((r && r.description) || 'No ad available right now', 'err'); });
