@@ -8,4 +8,4 @@ ALLOWED_ORIGIN = "https://rahimraj5373-del.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "minerpro-referrals"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "8f74e4b0-5b59-4e9d-bcc2-5c6b681d8ce6"

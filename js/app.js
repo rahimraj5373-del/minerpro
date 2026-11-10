@@ -28,7 +28,7 @@
     // Mini App short name from @BotFather (/newapp). If set, links open the app directly: t.me/BOT/APP?startapp=ref_ID
     APP_NAME: 'minerpro',
     // Referral server URL (see referral-worker/). Empty = referrals are stored only on this device (demo mode).
-    REF_API: '',
+    REF_API: 'https://minerpro-referrals.rahimraj5373.workers.dev',
     REF_SYNC_SECONDS: 30
   };
 
